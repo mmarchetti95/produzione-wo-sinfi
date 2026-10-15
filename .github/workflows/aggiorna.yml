@@ -49,7 +49,8 @@ jobs:
       - name: Configura pulsante Aggiorna ora
         env:
           TOKEN: ${{ secrets.BOARD_DISPATCH_TOKEN }}
-        run: echo "window.BOARD_CFG = {token: \"$TOKEN\"};" > sito/config.js
+        run: |
+          echo "window.BOARD_CFG = {token: \"$TOKEN\"};" > sito/config.js
 
       - uses: actions/configure-pages@v5
 
