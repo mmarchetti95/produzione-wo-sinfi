@@ -72,8 +72,8 @@ label.chk { display:inline-flex; gap:6px; align-items:center; color:var(--ink2);
 .card { background:var(--card); border:1px solid var(--border); border-radius:12px; box-shadow:var(--shadow) }
 .chart { padding:12px 14px 8px; margin-bottom:14px }
 .chart-h { display:flex; justify-content:space-between; gap:8px; color:var(--ink2); font-size:13px; margin-bottom:6px }
-.bars { display:flex; align-items:flex-end; gap:3px; height:110px; border-bottom:1px solid var(--border) }
-.bars .b { flex:1; min-width:4px; position:relative; height:100%; display:flex; align-items:flex-end; cursor:pointer; border-radius:4px 4px 0 0 }
+.bars { display:flex; align-items:flex-end; gap:2px; height:110px; border-bottom:1px solid var(--border) }
+.bars .b { flex:1; min-width:0; position:relative; height:100%; display:flex; align-items:flex-end; cursor:pointer; border-radius:4px 4px 0 0 }
 .bars .b i { display:block; width:100%; background:var(--accent); border-radius:4px 4px 0 0; opacity:.85; min-height:1px }
 .bars .b.we i { opacity:.45 }
 .bars .b.out i { opacity:.18 }
@@ -81,8 +81,9 @@ label.chk { display:inline-flex; gap:6px; align-items:center; color:var(--ink2);
 .bars .b.neg i { background:var(--neg) }
 .bars .b:hover i, .bars .b.sel i { opacity:1; outline:2px solid var(--accent); outline-offset:1px }
 .bars .b:hover { background:var(--hover) }
-.xlab { display:flex; gap:3px; font-size:11px; color:var(--muted); margin-top:4px }
-.xlab span { flex:1; min-width:4px; text-align:center; white-space:nowrap; overflow:visible }
+.xlab { display:flex; gap:2px; font-size:11px; color:var(--muted); margin-top:4px }
+.xlab span { flex:1; min-width:0; text-align:center; white-space:nowrap; overflow:visible }
+.btn[aria-busy=true] { cursor:progress; border-color:var(--accent) }
 
 /* tooltip */
 .tip { position:fixed; pointer-events:none; background:var(--tip-bg); color:var(--tip-ink); padding:8px 11px;
@@ -206,7 +207,7 @@ dialog.guida::backdrop { background:rgba(10,14,20,.5) }
   <section class="kpis" id="kpis"></section>
 
   <section class="card chart">
-    <div class="chart-h"><span>Km netti per giorno <span class="help">· clic su una barra per vedere solo quel giorno</span></span><span id="chartTot"></span></div>
+    <div class="chart-h"><span id="chartTit"></span><span id="chartTot"></span></div>
     <div class="bars" id="bars"></div>
     <div class="xlab" id="xlab"></div>
   </section>
@@ -215,6 +216,7 @@ dialog.guida::backdrop { background:rgba(10,14,20,.5) }
     <div class="toolbar">
       <div class="tabs" role="tablist" id="tabs"></div>
       <div class="range">
+        <select id="fPer" aria-label="Periodo" data-tip="Scegli il periodo da analizzare: tabella, riquadri, grafico ed export Excel si aggiornano subito.<div class='hint'>Sono disponibili gli ultimi 12 mesi. Per un periodo preciso usa le due date qui accanto.</div>"></select>
         <input type="date" id="fDa" aria-label="Dal" data-tip="Mostra i dati <b>dal</b> giorno indicato (giorno di sincronizzazione)"> –
         <input type="date" id="fA" aria-label="Al" data-tip="Mostra i dati <b>fino al</b> giorno indicato (compreso)">
       </div>
@@ -239,7 +241,8 @@ dialog.guida::backdrop { background:rgba(10,14,20,.5) }
   <details class="avvisi" id="avvisi" hidden><summary></summary><ul></ul></details>
   <p class="note">
     <b>Km netti</b> = linee nuove + allungamenti − accorciamenti − cancellazioni · <b>Km nuovi</b> = solo linee create ·
-    i giorni sono quelli di <b>sincronizzazione</b> (ora italiana). Passa il mouse su colonne e celle per i dettagli,
+    <b>Inizio / Fine</b> = prima e ultima foto della giornata ·
+    i giorni sono quelli di <b>sincronizzazione</b> (ora italiana), per le foto quelli di scatto. Passa il mouse su colonne e celle per i dettagli,
     oppure apri la <button class="linkbtn" id="bGuida2">Guida</button>.
   </p>
 </main>
@@ -273,8 +276,9 @@ da un giorno molto alto spesso vuol dire proprio questo. Gli orari sono in ora i
   <li>I dati si aggiornano <b>da soli ogni 30 minuti</b>, dal lunedì al sabato tra le 6 e le 21 circa. Non serve installare nulla: basta aprire la pagina.</li>
   <li>Sotto il titolo trovi il periodo coperto e <b>quando</b> sono stati aggiornati i dati (es. <i>aggiornati 5 min fa</i>).</li>
   <li>La pagina ricarica da sola i dati nuovi ogni 5 minuti; il bottone <b>Ricarica</b> lo fa subito.</li>
-  <li><b>Aggiorna ora</b> apre su GitHub l'aggiornamento manuale: clic su <i>Run workflow</i> e dopo 2-3 minuti premi <b>Ricarica</b>. Serve un account GitHub con accesso al repository.</li>
-  <li>Il periodo scaricato sono gli <b>ultimi 60 giorni</b>. I progetti fermi da molto tempo (nessuna attività da oltre 30 giorni prima del periodo) vengono saltati per fare prima: lo trovi scritto negli avvisi in fondo.</li>
+  <li><b>Aggiorna ora</b> scarica subito i dati nuovi senza aspettare l'aggiornamento automatico. Il pulsante mostra a che punto è (<i>In coda</i>, <i>Scarico i dati</i>, <i>Pubblico</i>):
+    dopo 2-3 minuti la board si aggiorna da sola, non serve fare altro. Se un aggiornamento è già in corso, anche avviato da un collega, il pulsante aspetta quello.</li>
+  <li>La board contiene gli <b>ultimi 12 mesi</b>. I progetti fermi da molto tempo (nessuna attività da oltre 30 giorni prima dell'inizio) vengono saltati per fare prima: lo trovi scritto negli avvisi in fondo.</li>
 </ul>
 
 <h3 id="g-numeri">4. Come leggere i numeri</h3>
@@ -286,6 +290,9 @@ da un giorno molto alto spesso vuol dire proprio questo. Gli orari sono in ora i
     <tr><td><b>Create</b></td><td>Quanti elementi sono stati creati: linee, punti (es. pozzetti, pali) e poligoni.</td></tr>
     <tr><td><b>Modificate</b></td><td>Quante modifiche sono state sincronizzate, sia alla geometria sia agli attributi. Lo stesso elemento modificato 3 volte conta 3.</td></tr>
     <tr><td><b>Cancellate</b></td><td>Quanti elementi sono stati cancellati.</td></tr>
+    <tr><td><b>Inizio</b></td><td>Orario della <b>prima foto</b> scattata nella giornata: indica quando è iniziata l'attività in campo. Solo nelle viste con una riga per giorno (Dettaglio e Per giorno).</td></tr>
+    <tr><td><b>Fine</b></td><td>Orario dell'<b>ultima foto</b> scattata nella giornata. Passa il mouse sull'orario per vedere quanto tempo è passato tra la prima e l'ultima foto.</td></tr>
+    <tr><td><b>Foto</b></td><td>Quante foto sono state scattate. Ogni foto conta una volta sola.</td></tr>
     <tr><td><b>Giorni attivi</b></td><td>In quanti giorni diversi c'è stata almeno una sincronizzazione.</td></tr>
     <tr><td><b>Km/giorno</b></td><td>Km netti ÷ giorni attivi: la resa media in un giorno di lavoro.</td></tr>
     <tr><td><b>Operatori / Progetti</b></td><td>Quanti operatori o progetti diversi sono coinvolti in quella riga. Passa il mouse sul numero per vedere i nomi.</td></tr>
@@ -302,19 +309,30 @@ Risultato: <b>Km nuovi = 3,00</b> (solo il punto 1) · <b>Km netti = 3,00 + 0,20
   <li><b>Km a zero ma con elementi creati o modificati</b>: l'operatore ha lavorato su punti (che non hanno lunghezza) o solo sugli attributi.</li>
   <li>I km contano <b>solo le linee</b>: punti e poligoni compaiono nelle colonne Create/Modificate/Cancellate ma non nei km.</li>
 </ul>
+<h4>Inizio e fine attività</h4>
+<p>Gli orari sono letti dal <b>nome del file</b> della foto, che QField crea con data e ora di scatto (es. <code>JPEG_20261015083012.jpg</code> = 15/10/2026 ore 08:30).
+Per questo:</p>
+<ul>
+  <li>Inizio, Fine e Foto stanno nel <b>giorno in cui la foto è stata scattata</b>, non in quello di sincronizzazione. Se l'operatore sincronizza il giorno dopo,
+    il giorno dello scatto compare con gli orari e km a zero, e i km compaiono il giorno della sincronizzazione.</li>
+  <li>L'ora è quella dell'<b>orologio del tablet o del telefono</b>: se è sbagliato, lo sono anche gli orari.</li>
+  <li>Le giornate senza foto hanno inizio e fine vuoti (<b>–</b>). Le foto il cui nome non contiene data e ora vengono segnalate negli avvisi in fondo alla pagina.</li>
+  <li>Il tempo tra prima e ultima foto non comprende eventuali spostamenti o lavoro fatto prima della prima foto o dopo l'ultima.</li>
+</ul>
 <h4>I riquadri in alto</h4>
 <p>Riassumono <b>quello che vedi in tabella</b>, quindi cambiano con la vista e con i filtri. <b>Km medi operatore/giorno</b> = km netti ÷ giornate-operatore,
 dove una giornata-operatore è un operatore che ha sincronizzato in un certo giorno (3 operatori per 2 giorni = 6 giornate).</p>
 <h4>Il grafico</h4>
-<p>Ogni barra è un giorno del periodo scaricato: l'altezza sono i km netti. Le barre più chiare sono sabato e domenica, quelle grigie sono giorni
-senza produzione. <b>Clic su una barra</b> per vedere solo quel giorno, clic di nuovo per tornare al periodo intero. Il grafico segue la ricerca e i filtri
-su operatore, progetto e layer, ma mostra sempre tutto il periodo.</p>
+<p>Il grafico mostra il <b>periodo scelto</b>: ogni barra è un giorno e l'altezza sono i km netti. Le barre più chiare sono sabato e domenica, quelle grigie
+sono giorni senza produzione. Se il periodo supera i 3 mesi, ogni barra è una <b>settimana</b> (da lunedì a domenica).
+<b>Clic su una barra</b> per vedere solo quel giorno o quella settimana, clic di nuovo sulla stessa barra per tornare al periodo di prima. Il grafico segue
+la ricerca e i filtri su operatore, progetto e layer.</p>
 
 <h3 id="g-viste">5. Le viste</h3>
 <table>
   <thead><tr><th>Vista</th><th>Una riga per…</th><th>Utile per</th></tr></thead>
   <tbody>
-    <tr><td><b>Dettaglio</b></td><td>giorno + operatore + progetto</td><td>vedere chi ha fatto cosa ogni giorno. Quando è ordinata per giorno, i giorni sono separati da una riga blu con i totali della giornata.</td></tr>
+    <tr><td><b>Dettaglio</b></td><td>giorno + operatore + progetto</td><td>vedere chi ha fatto cosa ogni giorno e a che ora ha iniziato e finito. Quando è ordinata per giorno, i giorni sono separati da una riga blu con i totali della giornata.</td></tr>
     <tr><td><b>Per operatore</b></td><td>operatore</td><td>confrontare la resa: totale km, giorni attivi, km al giorno.</td></tr>
     <tr><td><b>Per progetto</b></td><td>progetto</td><td>vedere l'avanzamento di ogni cantiere.</td></tr>
     <tr><td><b>Per giorno</b></td><td>giorno</td><td>l'andamento quotidiano della squadra.</td></tr>
@@ -326,7 +344,9 @@ su operatore, progetto e layer, ma mostra sempre tutto il periodo.</p>
 <h3 id="g-filtri">6. Filtrare e ordinare</h3>
 <h4>Filtri generali</h4>
 <ul>
-  <li><b>Date dal / al</b>: limitano il periodo mostrato, dentro quello scaricato.</li>
+  <li><b>Periodo</b>: scegli un periodo rapido (ultimi 7, 30 o 60 giorni, mese corrente, mese scorso, anno corrente, tutto lo storico). Alla prossima apertura la board
+    riparte dallo stesso periodo, aggiornato al giorno corrente. All'apertura sono mostrati gli ultimi 60 giorni.</li>
+  <li><b>Date dal / al</b>: per un periodo preciso, dentro gli ultimi 12 mesi. Il periodo diventa <i>Personalizzato</i>.</li>
   <li><b>Cerca</b>: cerca contemporaneamente in operatore, progetto e layer.</li>
 </ul>
 <h4>Filtri di colonna</h4>
@@ -344,6 +364,7 @@ su operatore, progetto e layer, ma mostra sempre tutto il periodo.</p>
     <tr><td><code>0</code> · <code>!=0</code></td><td>uguale a zero · diverso da zero</td></tr>
     <tr><td><code>1,5</code> · <code>&gt;0,5</code></td><td>i decimali si scrivono con la virgola</td></tr>
     <tr><td><code>12/10</code> · <code>/10/</code> · <code>sab</code></td><td>sulla colonna Giorno: il 12 ottobre · tutto ottobre · tutti i sabati</td></tr>
+    <tr><td><code>&gt;9</code> · <code>&lt;16:30</code> · <code>7..8:30</code></td><td>sulle colonne Inizio e Fine: dopo le 9 · prima delle 16:30 · tra le 7 e le 8:30</td></tr>
   </tbody>
 </table>
 <p>I filtri attivi compaiono come etichette blu sopra la tabella: la <b>×</b> ne toglie uno, <b>Azzera filtri</b> li toglie tutti.
@@ -390,6 +411,8 @@ il secondo inverte. La freccia blu indica la colonna usata.</p>
 <div class="tip" id="tip" role="tooltip"></div>
 <div class="toast" id="toast"></div>
 
+<!-- creato dalla GitHub Action con il token del pulsante "Aggiorna ora" (manca in locale: il pulsante apre GitHub) -->
+<script src="config.js"></script>
 <script>
 "use strict";
 const $ = id => document.getElementById(id);
@@ -407,7 +430,10 @@ const elenco = (set, max = 10) => { const a = [...set].sort((x, y) => x.localeCo
 
 /* ---------- colonne e viste ---------- */
 const COL = {
-  giorno:       {l:"Giorno",        t:"data",  d:"Giorno in cui il lavoro è stato <b>sincronizzato</b> su QFieldCloud (ora italiana). Non è per forza il giorno in cui è stato disegnato."},
+  giorno:       {l:"Giorno",        t:"data",  d:"Giorno in cui il lavoro è stato <b>sincronizzato</b> su QFieldCloud (ora italiana). Non è per forza il giorno in cui è stato disegnato. Solo per Inizio, Fine e Foto conta il giorno in cui la foto è stata <b>scattata</b>."},
+  inizio:       {l:"Inizio",        t:"ora",   d:"Orario della <b>prima foto</b> scattata nella giornata, letto dal nome del file (orologio del tablet/telefono). Vuoto se quel giorno non ci sono foto."},
+  fine:         {l:"Fine",          t:"ora",   d:"Orario dell'<b>ultima foto</b> scattata nella giornata, letto dal nome del file (orologio del tablet/telefono)."},
+  foto:         {l:"Foto",          t:"int",   d:"Foto scattate, contate nel giorno di scatto. Una foto conta una volta sola anche se l'elemento viene modificato più volte."},
   operatore:    {l:"Operatore",     t:"testo", d:"Utente QFieldCloud che ha sincronizzato le modifiche."},
   progetto:     {l:"Progetto",      t:"testo", d:"Progetto QFieldCloud in cui sono state fatte le modifiche."},
   layer:        {l:"Layer",         t:"testo", d:"Strato del progetto (nome interno di QGIS) in cui sono state fatte le modifiche."},
@@ -423,28 +449,59 @@ const COL = {
 };
 const MET = ["km_netti","km_nuovi","create","modificate","cancellate"];
 const VISTE = {
-  dettaglio: {l:"Dettaglio",     key:["giorno","operatore","progetto"], extra:[], sort:[["giorno",-1],["km_netti",-1]],
-              d:"Una riga per giorno + operatore + progetto. Ordinata per giorno, mostra un separatore con i totali di ogni giornata."},
-  operatore: {l:"Per operatore", key:["operatore"], extra:["giorni_attivi","km_al_giorno","n_progetti"], sort:[["km_netti",-1]],
+  dettaglio: {l:"Dettaglio",     key:["giorno","operatore","progetto"], extra:["foto"], sort:[["giorno",-1],["km_netti",-1]],
+              d:"Una riga per giorno + operatore + progetto, con orario di inizio e fine (prima e ultima foto). Ordinata per giorno, mostra un separatore con i totali di ogni giornata."},
+  operatore: {l:"Per operatore", key:["operatore"], extra:["foto","giorni_attivi","km_al_giorno","n_progetti"], sort:[["km_netti",-1]],
               d:"Una riga per operatore: totale del periodo, giorni attivi e resa media al giorno."},
-  progetto:  {l:"Per progetto",  key:["progetto"],  extra:["giorni_attivi","n_operatori"], sort:[["km_netti",-1]],
+  progetto:  {l:"Per progetto",  key:["progetto"],  extra:["foto","giorni_attivi","n_operatori"], sort:[["km_netti",-1]],
               d:"Una riga per progetto: avanzamento di ogni cantiere nel periodo."},
-  giorno:    {l:"Per giorno",    key:["giorno"],    extra:["n_operatori","n_progetti"], sort:[["giorno",-1]],
-              d:"Una riga per giorno: andamento quotidiano di tutta la squadra."},
-  layer:     {l:"Per layer",     key:["progetto","layer"], extra:["n_operatori"], sort:[["progetto",1],["km_netti",-1]],
+  giorno:    {l:"Per giorno",    key:["giorno"],    extra:["foto","n_operatori","n_progetti"], sort:[["giorno",-1]],
+              d:"Una riga per giorno: andamento quotidiano di tutta la squadra, con la prima e l'ultima foto della giornata."},
+  layer:     {l:"Per layer",     key:["progetto","layer"], extra:["foto","n_operatori"], sort:[["progetto",1],["km_netti",-1]],
               d:"Una riga per progetto + layer: su quali strati si lavora."},
 };
-const colonne = v => [...VISTE[v].key, ...MET, ...VISTE[v].extra];
-const isNum = k => !["testo","data"].includes(COL[k].t);
+// inizio/fine hanno senso solo nelle viste con una riga per giorno
+const colonne = v => [...VISTE[v].key, ...(VISTE[v].key.includes("giorno") ? ["inizio","fine"] : []), ...MET, ...VISTE[v].extra];
+const isNum = k => !["testo","data","ora"].includes(COL[k].t);
+const aDestra = k => isNum(k) || COL[k].t === "ora";
+// la riga contiene lavoro sincronizzato (non solo foto scattate quel giorno e sincronizzate dopo)
+const sincr = r => MET.some(m => r[m]) || r.problemi > 0;
+const minOra = (a, b) => !a ? b : !b ? a : a < b ? a : b;
+const maxOra = (a, b) => !a ? b : !b ? a : a > b ? a : b;
+const minuti = s => { const m = String(s ?? "").trim().match(/^(\d{1,2})(?::(\d{2}))?$/); return m ? m[1] * 60 + Number(m[2] || 0) : NaN; };
+const durata = (da, a) => { const d = minuti(a) - minuti(da); return `${Math.floor(d / 60)} h ${String(d % 60).padStart(2, "0")} min`; };
 
 /* ---------- stato UI (vista e ordinamento ricordati nel browser) ---------- */
 const REPO = "mmarchetti95/produzione-wo-sinfi";
 let DATI = null;
-let ui = {vista:"dettaglio", sort:{}, filtri:{}, q:"", da:"", a:""};
-try { const s = JSON.parse(localStorage.getItem("board_ui") || "{}"); ui.vista = s.vista || ui.vista; ui.sort = s.sort || {}; } catch(e) {}
+const addG = (iso, n) => { const d = dObj(iso); d.setDate(d.getDate() + n); return dIso(d); };
+// periodi rapidi, calcolati rispetto all'ultimo giorno dei dati
+const PERIODI = {
+  "7":     {l:"Ultimi 7 giorni",  f: al => [addG(al, -6), al]},
+  "30":    {l:"Ultimi 30 giorni", f: al => [addG(al, -29), al]},
+  "60":    {l:"Ultimi 60 giorni", f: al => [addG(al, -59), al]},
+  "90":    {l:"Ultimi 3 mesi",    f: al => [addG(al, -89), al]},
+  "mese":  {l:"Mese corrente",    f: al => [al.slice(0, 8) + "01", al]},
+  "mesep": {l:"Mese scorso",      f: al => { const fine = addG(al.slice(0, 8) + "01", -1); return [fine.slice(0, 8) + "01", fine]; }},
+  "anno":  {l:"Anno corrente",    f: al => [al.slice(0, 4) + "-01-01", al]},
+  "tutto": {l:"Tutto lo storico", f: () => ["", ""]},
+  "custom":{l:"Personalizzato"},
+};
+const PERIODO_DEF = "60";
+let ui = {vista:"dettaglio", sort:{}, filtri:{}, q:"", da:"", a:"", periodo:PERIODO_DEF, prima:null};
+try { const s = JSON.parse(localStorage.getItem("board_ui") || "{}"); ui.vista = s.vista || ui.vista; ui.sort = s.sort || {}; ui.periodo = s.periodo || ui.periodo; } catch(e) {}
 if (!VISTE[ui.vista]) ui.vista = "dettaglio";
+if (!PERIODI[ui.periodo] || ui.periodo === "custom") ui.periodo = PERIODO_DEF;
 for (const v in ui.sort) ui.sort[v] = (ui.sort[v] || []).filter(s => COL[s[0]]);
-const salvaUi = () => { try { localStorage.setItem("board_ui", JSON.stringify({vista:ui.vista, sort:ui.sort})); } catch(e) {} };
+const salvaUi = () => { try { localStorage.setItem("board_ui", JSON.stringify({vista:ui.vista, sort:ui.sort, periodo:ui.periodo === "custom" ? undefined : ui.periodo})); } catch(e) {} };
+function applicaPeriodo(k) {
+  ui.periodo = k; ui.prima = null;
+  if (PERIODI[k].f && DATI) {
+    const [da, a] = PERIODI[k].f(DATI.al);
+    ui.da = da && da > DATI.dal ? da : ""; ui.a = a && a < DATI.al ? a : "";
+  }
+}
+function syncPeriodoUi() { $("fPer").value = ui.periodo; $("fDa").value = ui.da; $("fA").value = ui.a; }
 
 /* ---------- filtri ---------- */
 function matchTesto(val, f) {
@@ -466,6 +523,13 @@ function matchNum(v, f) {
   const n = parseNum(f);
   return isNaN(n) ? true : Math.abs(v - n) < 5e-3;
 }
+function matchOra(v, f) {
+  f = f.trim(); if (!f) return true;
+  const x = minuti(v); let m;
+  if ((m = f.match(/^(.+?)\s*\.\.\s*(.+)$/)) && !isNaN(minuti(m[1])) && !isNaN(minuti(m[2]))) return x >= minuti(m[1]) && x <= minuti(m[2]);
+  if ((m = f.match(/^(>=|<=|>|<)\s*(.+)$/)) && !isNaN(minuti(m[2]))) { const n = minuti(m[2]); return {">=":x>=n, "<=":x<=n, ">":x>n, "<":x<n}[m[1]]; }
+  return matchTesto(v, f);
+}
 function testoCella(k, v) { return COL[k].t === "data" ? dLab(v) : v; }
 
 /* ---------- calcolo ---------- */
@@ -480,9 +544,10 @@ function aggrega(R, vista) {
   for (const r of R) {
     const k = V.key.map(c => r[c]).join("\u0001");
     let a = acc.get(k);
-    if (!a) { a = {_src:[], _g:new Set(), _o:new Set(), _p:new Set(), _l:new Set()}; V.key.forEach(c => a[c] = r[c]); MET.forEach(m => a[m] = 0); acc.set(k, a); }
+    if (!a) { a = {_src:[], _g:new Set(), _o:new Set(), _p:new Set(), _l:new Set(), foto:0, inizio:"", fine:""}; V.key.forEach(c => a[c] = r[c]); MET.forEach(m => a[m] = 0); acc.set(k, a); }
     MET.forEach(m => a[m] += r[m]);
-    a._src.push(r); a._g.add(r.giorno); a._o.add(r.operatore); a._p.add(r.progetto); a._l.add(r.layer);
+    a.foto += r.foto; a.inizio = minOra(a.inizio, r.inizio); a.fine = maxOra(a.fine, r.fine);
+    a._src.push(r); if (sincr(r)) a._g.add(r.giorno); a._o.add(r.operatore); a._p.add(r.progetto); a._l.add(r.layer);
   }
   for (const a of acc.values()) {
     a.giorni_attivi = a._g.size; a.n_operatori = a._o.size; a.n_progetti = a._p.size;
@@ -494,7 +559,7 @@ function filtraColonne(rows, cols) {
   const fv = ui.filtri[ui.vista] || {};
   const att = cols.filter(k => fv[k]);
   if (!att.length) return rows;
-  return rows.filter(r => att.every(k => isNum(k) ? matchNum(r[k], fv[k]) : matchTesto(testoCella(k, r[k]), fv[k])));
+  return rows.filter(r => att.every(k => isNum(k) ? matchNum(r[k], fv[k]) : COL[k].t === "ora" ? matchOra(r[k], fv[k]) : matchTesto(testoCella(k, r[k]), fv[k])));
 }
 const ordAttivo = () => ui.sort[ui.vista] && ui.sort[ui.vista].length ? ui.sort[ui.vista] : VISTE[ui.vista].sort;
 function ordina(rows) {
@@ -502,6 +567,7 @@ function ordina(rows) {
   return rows.sort((x, y) => {
     for (const [k, dir] of s) {
       const a = x[k], b = y[k];
+      if (COL[k].t === "ora" && !a !== !b) return a ? -1 : 1;  // senza orario sempre in fondo
       const c = typeof a === "number" ? a - b : String(a).localeCompare(String(b), "it", {numeric:true, sensitivity:"base"});
       if (c) return c * dir;
     }
@@ -519,6 +585,7 @@ const raggruppato = () => ui.vista === "dettaglio" && ordAttivo()[0][0] === "gio
 function fmt(k, v) {
   const t = COL[k].t;
   if (t === "data") return dLab(v);
+  if (t === "ora") return v || "–";
   if (t === "testo") return esc(v);
   return F[t].format(v);
 }
@@ -527,11 +594,11 @@ function renderHead() {
   const h = COLS.map(k => {
     const dir = s[0][0] === k ? s[0][1] : 0;
     const ar = `<span class="ar">${dir ? (dir > 0 ? "▲" : "▼") : ""}</span>`;
-    return `<th data-k="${k}" class="${isNum(k) ? "num" : ""}" aria-sort="${dir > 0 ? "ascending" : dir < 0 ? "descending" : "none"}">${isNum(k) ? ar + COL[k].l : COL[k].l + " " + ar}</th>`;
+    return `<th data-k="${k}" class="${aDestra(k) ? "num" : ""}" aria-sort="${dir > 0 ? "ascending" : dir < 0 ? "descending" : "none"}">${aDestra(k) ? ar + COL[k].l : COL[k].l + " " + ar}</th>`;
   }).join("");
   const f = COLS.map(k => {
-    const ph = isNum(k) ? "es. >0" : COL[k].t === "data" ? "es. 12/10, lun" : "filtra…";
-    return `<th><input data-f="${k}" class="${fv[k] ? "on" : ""}" value="${esc(fv[k]||"")}" placeholder="${ph}" aria-label="Filtro ${COL[k].l}" ${isNum(k) ? 'style="text-align:right"' : ""}></th>`;
+    const ph = isNum(k) ? "es. >0" : COL[k].t === "data" ? "es. 12/10, lun" : COL[k].t === "ora" ? "es. <8:00" : "filtra…";
+    return `<th><input data-f="${k}" class="${fv[k] ? "on" : ""}" value="${esc(fv[k]||"")}" placeholder="${ph}" aria-label="Filtro ${COL[k].l}" ${aDestra(k) ? 'style="text-align:right"' : ""}></th>`;
   }).join("");
   $("th").innerHTML = `<tr class="h">${h}</tr><tr class="f">${f}</tr>`;
 }
@@ -539,9 +606,10 @@ const LIMITE = 3000;
 function cella(r, k, i, maxKm, nascondiGiorno) {
   const t = COL[k].t, v = r[k];
   let cls = `t-${t} k${VISTE[ui.vista].key.indexOf(k)}`;
-  if (isNum(k)) cls += " num";
+  if (aDestra(k)) cls += " num";
   if (typeof v === "number" && v < -0.0005) cls += " neg";
   if (typeof v === "number" && Math.abs(v) < 0.0005 && k !== "km_netti") cls += " dim";
+  if (t === "ora" && !v) cls += " dim";
   if (nascondiGiorno && k === "giorno") cls += " gday";
   let html = fmt(k, v);
   if (COL[k].bar) html = `<span class="kb"><i style="width:${(Math.max(0, v) / maxKm * 100).toFixed(1)}%"></i></span>${html}`;
@@ -553,8 +621,9 @@ function renderBody() {
   // totali per giorno (su tutte le righe visibili, non solo le prime LIMITE)
   GRUPPI = {};
   if (grp) for (const r of VISIBILI) {
-    const g = GRUPPI[r.giorno] ||= {n:0, o:new Set(), p:new Set(), ...Object.fromEntries(MET.map(m => [m, 0]))};
+    const g = GRUPPI[r.giorno] ||= {n:0, o:new Set(), p:new Set(), foto:0, inizio:"", fine:"", ...Object.fromEntries(MET.map(m => [m, 0]))};
     g.n++; g.o.add(r.operatore); g.p.add(r.progetto); MET.forEach(m => g[m] += r[m]);
+    g.foto += r.foto; g.inizio = minOra(g.inizio, r.inizio); g.fine = maxOra(g.fine, r.fine);
   }
   let out = "", ultimo = null;
   R.forEach((r, i) => {
@@ -573,8 +642,10 @@ function renderBody() {
   tb.innerHTML = out || `<tr><td colspan="${COLS.length}" class="vuoto">${DATI ? "Nessun dato per questi filtri" : "Nessun dato disponibile"}</td></tr>`;
   // totali
   const src = VISIBILI.flatMap(r => r._src);
-  TOT = {_n: VISIBILI.length, _g:new Set(src.map(r => r.giorno)), _o:new Set(src.map(r => r.operatore)), _p:new Set(src.map(r => r.progetto))};
+  TOT = {_n: VISIBILI.length, _g:new Set(src.filter(sincr).map(r => r.giorno)), _o:new Set(src.map(r => r.operatore)), _p:new Set(src.map(r => r.progetto))};
   MET.forEach(m => TOT[m] = VISIBILI.reduce((s, r) => s + r[m], 0));
+  TOT.foto = VISIBILI.reduce((s, r) => s + r.foto, 0);
+  TOT.inizio = VISIBILI.reduce((s, r) => minOra(s, r.inizio), ""); TOT.fine = VISIBILI.reduce((s, r) => maxOra(s, r.fine), "");
   TOT.giorni_attivi = TOT._g.size; TOT.km_al_giorno = TOT._g.size ? TOT.km_netti / TOT._g.size : 0;
   TOT.n_operatori = TOT._o.size; TOT.n_progetti = TOT._p.size;
   const nk = VISTE[ui.vista].key.length;
@@ -585,7 +656,7 @@ function renderBody() {
 function renderKpi(src) {
   const s = m => src.reduce((a, r) => a + r[m], 0);
   const ops = new Set(src.map(r => r.operatore)), prj = new Set(src.map(r => r.progetto));
-  const gOp = new Set(src.map(r => r.operatore + "|" + r.giorno)).size;
+  const gOp = new Set(src.filter(sincr).map(r => r.operatore + "|" + r.giorno)).size;
   const kn = s("km_netti"), kv = s("km_nuovi");
   const nota = "<div class='hint'>Calcolato su quello che vedi in tabella (vista e filtri attuali).</div>";
   const k = [
@@ -600,8 +671,8 @@ function renderKpi(src) {
   ];
   $("kpis").innerHTML = k.map(([l, v, u, t]) => `<div class="kpi" data-tip="${esc(t)}"><div class="l">${l}</div><div class="v">${v}${u ? `<small>${u}</small>` : ""}</div></div>`).join("");
 }
-// righe per il grafico: stessa ricerca e filtri su operatore/progetto/layer, ma tutto il periodo
-let CHART = {};
+// righe per il grafico: stessa ricerca e filtri su operatore/progetto/layer (il periodo lo decide renderChart)
+let BARRE = [], finestra = null;
 function righeGrafico() {
   if (!DATI) return [];
   const fv = ui.filtri[ui.vista] || {}, q = ui.q.trim();
@@ -610,23 +681,34 @@ function righeGrafico() {
 }
 function renderChart(src) {
   if (!DATI) { $("bars").innerHTML = ""; $("xlab").innerHTML = ""; return; }
-  CHART = {};
-  src.forEach(r => { const c = CHART[r.giorno] ||= {km:0, kv:0, c:0, o:new Set()}; c.km += r.km_netti; c.kv += r.km_nuovi; c.c += r.create; c.o.add(r.operatore); });
+  // il grafico mostra il periodo scelto; selezionando un solo giorno resta sul periodo di prima
+  const da = ui.da || DATI.dal, a = ui.a || DATI.al;
+  if (da !== a || !finestra) finestra = [da, a];
   const giorni = [];
-  for (let d = dObj(DATI.dal); dIso(d) <= DATI.al; d.setDate(d.getDate() + 1)) giorni.push(dIso(d));
-  const max = Math.max(0.001, ...giorni.map(g => Math.abs(CHART[g]?.km || 0)));
-  const passo = Math.max(1, Math.ceil(giorni.length / 12));
-  $("bars").innerHTML = giorni.map(g => {
-    const v = CHART[g]?.km || 0, h = Math.abs(v) / max * 100, we = [0,6].includes(dObj(g).getDay());
-    const sel = ui.da === g && ui.a === g, out = (ui.da && g < ui.da) || (ui.a && g > ui.a);
-    return `<div class="b${we ? " we" : ""}${v === 0 ? " zero" : ""}${v < 0 ? " neg" : ""}${sel ? " sel" : ""}${out ? " out" : ""}" data-g="${g}"><i style="height:${Math.max(h, 0.8)}%"></i></div>`;
+  for (let d = dObj(finestra[0]); dIso(d) <= finestra[1]; d.setDate(d.getDate() + 1)) giorni.push(dIso(d));
+  // oltre 3 mesi una barra per settimana (da lunedì), altrimenti le barre diventano illeggibili
+  const sett = giorni.length > 92, idx = {};
+  BARRE = [];
+  giorni.forEach(g => {
+    if (!sett || !BARRE.length || dObj(g).getDay() === 1) BARRE.push({da:g, a:g, km:0, kv:0, c:0, o:new Set()});
+    BARRE[BARRE.length - 1].a = g; idx[g] = BARRE.length - 1;
+  });
+  src.forEach(r => { const b = BARRE[idx[r.giorno]]; if (b) { b.km += r.km_netti; b.kv += r.km_nuovi; b.c += r.create; if (sincr(r)) b.o.add(r.operatore); } });
+  BARRE.sett = sett;
+  const max = Math.max(0.001, ...BARRE.map(b => Math.abs(b.km)));
+  const passo = Math.max(1, Math.ceil(BARRE.length / 12));
+  $("bars").innerHTML = BARRE.map((b, i) => {
+    const v = b.km, h = Math.abs(v) / max * 100, we = !sett && [0,6].includes(dObj(b.da).getDay());
+    const sel = ui.da === b.da && ui.a === b.a, out = (ui.da && b.a < ui.da) || (ui.a && b.da > ui.a);
+    return `<div class="b${we ? " we" : ""}${v === 0 ? " zero" : ""}${v < 0 ? " neg" : ""}${sel ? " sel" : ""}${out ? " out" : ""}" data-i="${i}"><i style="height:${Math.max(h, 0.8)}%"></i></div>`;
   }).join("");
-  $("xlab").innerHTML = giorni.map((g, i) => `<span>${i % passo === 0 ? g.slice(8) + "/" + g.slice(5, 7) : ""}</span>`).join("");
-  $("chartTot").textContent = `${F.km.format(Object.values(CHART).reduce((x, c) => x + c.km, 0))} km in ${giorni.length} giorni`;
+  $("xlab").innerHTML = BARRE.map((b, i) => `<span>${i % passo === 0 ? b.da.slice(8) + "/" + b.da.slice(5, 7) : ""}</span>`).join("");
+  $("chartTit").innerHTML = `Km netti per ${sett ? "settimana" : "giorno"} <span class="help">· clic su una barra per vedere solo ${sett ? "quella settimana" : "quel giorno"}</span>`;
+  $("chartTot").textContent = `${F.km.format(BARRE.reduce((x, b) => x + b.km, 0))} km dal ${dIt(finestra[0])} al ${dIt(finestra[1])}`;
 }
 function renderInfo() {
   const chips = [];
-  if (ui.da || ui.a) chips.push(["date", `Periodo: ${ui.da ? dIt(ui.da) : "…"} – ${ui.a ? dIt(ui.a) : "…"}`]);
+  if (ui.da || ui.a) chips.push(["date", `Periodo: ${ui.periodo !== "custom" ? PERIODI[ui.periodo].l + " · " : ""}${dIt(ui.da || DATI.dal)} – ${dIt(ui.a || DATI.al)}`]);
   if (ui.q) chips.push(["q", `Cerca: ${ui.q}`]);
   Object.entries(ui.filtri[ui.vista] || {}).forEach(([k, v]) => v && COLS.includes(k) && chips.push(["f:" + k, `${COL[k].l}: ${v}`]));
   $("info").innerHTML = `<span>${plur(VISIBILI.length, "riga", "righe")}</span>` +
@@ -637,11 +719,11 @@ function render(soloCorpo) {
   if (!soloCorpo) renderHead();
   const src = renderBody();
   renderKpi(src); renderChart(righeGrafico()); renderInfo();
-  $("bReset").disabled = !(ui.da || ui.a || ui.q || Object.values(ui.filtri[ui.vista] || {}).some(Boolean));
+  $("bReset").disabled = !(ui.periodo !== PERIODO_DEF || ui.q || Object.values(ui.filtri[ui.vista] || {}).some(Boolean));
 }
 function descrizioneFiltri() {
   const f = [];
-  if (ui.da || ui.a) f.push(`Periodo ${ui.da ? dIt(ui.da) : "inizio"} - ${ui.a ? dIt(ui.a) : "fine"}`);
+  if (ui.da || ui.a) f.push(`Periodo ${dIt(ui.da || DATI.dal)} - ${dIt(ui.a || DATI.al)}`);
   if (ui.q) f.push(`Ricerca: ${ui.q}`);
   Object.entries(ui.filtri[ui.vista] || {}).forEach(([k, v]) => v && COLS.includes(k) && f.push(`${COL[k].l}: ${v}`));
   return f;
@@ -652,7 +734,14 @@ const H = {
   testo: "Scrivi parte del nome. Più valori separati da virgola = uno qualsiasi (es. <code>rperri, hsemry</code>). Con <code>!</code> escludi (es. <code>!test</code>).",
   data: "Scrivi parte della data o del giorno: <code>12/10</code> (un giorno), <code>/10/</code> (tutto ottobre), <code>sab</code> (tutti i sabati).",
   num: "<code>&gt;5</code> maggiore di 5 · <code>&lt;0</code> negativi · <code>2..10</code> tra 2 e 10 · <code>0</code> uguale a zero · <code>!=0</code> diverso da zero. Decimali con la virgola.",
+  ora: "<code>&lt;8</code> prima delle 8 · <code>&gt;=17:30</code> dalle 17:30 in poi · <code>7..9</code> tra le 7 e le 9. Ore e minuti con i due punti.",
 };
+function tipOrari(r, tot) {
+  if (!r.inizio) return `<div class="big">Nessuna foto</div>Nessuna foto con orario in questa riga: inizio e fine non sono disponibili.`;
+  if (tot) return `<div class="big">${r.inizio} – ${r.fine}</div>Prima foto più presto e ultima foto più tardi tra queste righe · ${plur(r.foto, "foto", "foto")}.`;
+  return `<div class="big">${r.inizio} – ${r.fine}</div>Prima e ultima foto della giornata: <b>${durata(r.inizio, r.fine)}</b> tra l'una e l'altra · ${plur(r.foto, "foto", "foto")}.` +
+    `<div class="hint">Orari letti dal nome delle foto (orologio del dispositivo), nel giorno in cui sono state scattate.</div>`;
+}
 function contesto(r) {
   const p = [];
   if ("giorno" in r && VISTE[ui.vista].key.includes("giorno")) p.push(dLab(r.giorno));
@@ -671,7 +760,10 @@ function spiegaKm(kn, kv) {
 function tipValore(k, r, tot) {
   const v = r[k], ogg = tot ? "in totale" : "";
   switch (k) {
-    case "giorno":    return `<div class="big">${dLungo(v)}</div>Giorno di sincronizzazione (ora italiana).`;
+    case "giorno":    return `<div class="big">${dLungo(v)}</div>Giorno di sincronizzazione (ora italiana); per inizio, fine e foto è il giorno di scatto.` +
+                             (r._src && !r._src.some(sincr) ? `<div class="hint">Solo foto: scattate questo giorno ma sincronizzate in un giorno successivo, dove trovi km ed elementi.</div>` : "");
+    case "inizio": case "fine": return tipOrari(r, tot);
+    case "foto":      return `<div class="big">${plur(v, "foto", "foto")}</div>Foto scattate ${ogg}, contate nel giorno di scatto.`;
     case "operatore": return `<div class="big">${esc(v)}</div>Utente QFieldCloud.` + (r._p ? `<br>Progetti: ${elenco(r._p)}` : "") +
                              (r._g && ui.vista !== "dettaglio" ? `<br>Giorni attivi: ${r._g.size}` : "");
     case "progetto":  return `<div class="big">${esc(v)}</div>Progetto QFieldCloud.` + (r._o ? `<br>Operatori: ${elenco(r._o)}` : "");
@@ -698,9 +790,11 @@ function tipPer(el) {
     return `<b>Filtra ${COL[k].l}</b><br>${isNum(k) ? H.num : H[COL[k].t]}`; }
   if (el.matches("#tabs button")) return `<b>${VISTE[el.dataset.v].l}</b><br>${VISTE[el.dataset.v].d}`;
   // barre grafico
-  if (el.matches(".bars .b")) { const g = el.dataset.g, c = CHART[g];
-    return `<div class="big">${dLab(g)}</div>` + (c ? `${F.km.format(c.km)} km netti · ${F.km.format(c.kv)} km nuovi<br>${plur(c.c, "elemento creato", "elementi creati")} · ${plur(c.o.size, "operatore", "operatori")}` : "Nessuna sincronizzazione") +
-      `<div class="hint">${ui.da === g && ui.a === g ? "Clic per tornare a tutto il periodo" : "Clic per vedere solo questo giorno"}</div>`; }
+  if (el.matches(".bars .b")) { const b = BARRE[Number(el.dataset.i)];
+    if (!b) return "";
+    return `<div class="big">${BARRE.sett ? `Settimana ${dIt(b.da)} – ${dIt(b.a)}` : dLab(b.da)}</div>` +
+      (b.o.size || b.c ? `${F.km.format(b.km)} km netti · ${F.km.format(b.kv)} km nuovi<br>${plur(b.c, "elemento creato", "elementi creati")} · ${plur(b.o.size, "operatore", "operatori")}` : "Nessuna sincronizzazione") +
+      `<div class="hint">${ui.da === b.da && ui.a === b.a ? "Clic per tornare al periodo di prima" : BARRE.sett ? "Clic per vedere questa settimana giorno per giorno" : "Clic per vedere solo questo giorno"}</div>`; }
   // celle
   const k = el.dataset.k, tr = el.parentElement;
   if (!k) return "";
@@ -764,14 +858,15 @@ function renderAvvisi() {
 const pulisciLayer = s => String(s).replace(/_?[0-9a-f]{8}(_[0-9a-f]{4}){3}_[0-9a-f]{12}$/i, "").replace(/_?\d{17}$/, "") || String(s);
 function impostaDati(d) {
   const prima = DATI && DATI.aggiornato;
-  d.righe.forEach(r => { r.layer_id = r.layer; r.layer = pulisciLayer(r.layer); });
+  d.righe.forEach(r => { r.layer_id = r.layer; r.layer = pulisciLayer(r.layer); r.foto ||= 0; r.inizio ||= ""; r.fine ||= ""; });
   DATI = d;
   if (prima !== DATI.aggiornato) {
+    if (ui.periodo !== "custom") applicaPeriodo(ui.periodo);  // i periodi rapidi seguono il nuovo ultimo giorno
     if (ui.da && ui.da < DATI.dal) ui.da = "";
     if (ui.a && ui.a > DATI.al) ui.a = "";
   }
   $("fDa").min = $("fA").min = DATI.dal; $("fDa").max = $("fA").max = DATI.al;
-  $("fDa").value = ui.da; $("fA").value = ui.a;
+  syncPeriodoUi();
 }
 const ORE_DATI_VECCHI = 36;  // oltre: gli aggiornamenti automatici probabilmente falliscono
 function renderBanner(err) {
@@ -801,13 +896,14 @@ async function caricaDati(manuale) {
 }
 
 /* ---------- export Excel (nel browser, con SheetJS) ---------- */
-const XFMT = {km: "#,##0.000", mq: "#,##0", int: "#,##0", dec: "#,##0.00", data: "dd/mm/yyyy"};
+const XFMT = {km: "#,##0.000", mq: "#,##0", int: "#,##0", dec: "#,##0.00", data: "dd/mm/yyyy", ora: "hh:mm"};
 const NON_SOMMARE = ["giorni_attivi", "n_operatori", "n_progetti", "km_al_giorno"];
 function foglioXlsx(colonne, righe) {
   const aoa = [colonne.map(k => COL[k].l)];
   // date come numero seriale Excel: evita sfasamenti di fuso orario
   const seriale = iso => { const [y, m, d] = iso.split("-").map(Number); return (Date.UTC(y, m - 1, d) - Date.UTC(1899, 11, 30)) / 86400000; };
-  righe.forEach(r => aoa.push(colonne.map(k => COL[k].t === "data" ? seriale(r[k]) : typeof r[k] === "number" ? Math.round(r[k] * 10000) / 10000 : r[k])));
+  // orari come frazione di giorno: in Excel si possono sottrarre per avere la durata
+  righe.forEach(r => aoa.push(colonne.map(k => COL[k].t === "data" ? seriale(r[k]) : COL[k].t === "ora" ? (r[k] ? minuti(r[k]) / 1440 : null) : typeof r[k] === "number" ? Math.round(r[k] * 10000) / 10000 : r[k])));
   const ws = XLSX.utils.aoa_to_sheet(aoa);
   const n = righe.length;
   colonne.forEach((k, j) => {
@@ -888,29 +984,97 @@ $("th").addEventListener("input", e => {
   clearTimeout(deb); deb = setTimeout(() => render(true), 150);
 });
 $("q").addEventListener("input", e => { ui.q = e.target.value; clearTimeout(deb); deb = setTimeout(() => render(true), 150); });
-$("fDa").addEventListener("change", e => { ui.da = e.target.value; render(true); });
-$("fA").addEventListener("change", e => { ui.a = e.target.value; render(true); });
+$("fPer").innerHTML = Object.entries(PERIODI).map(([k, p]) => `<option value="${k}">${p.l}</option>`).join("");
+$("fPer").value = ui.periodo;
+$("fPer").addEventListener("change", e => {
+  if (e.target.value !== "custom") applicaPeriodo(e.target.value); else ui.periodo = "custom";
+  syncPeriodoUi(); salvaUi(); render(true);
+});
+const dataManuale = (campo, v) => { ui[campo] = v; ui.periodo = "custom"; ui.prima = null; syncPeriodoUi(); render(true); };
+$("fDa").addEventListener("change", e => dataManuale("da", e.target.value));
+$("fA").addEventListener("change", e => dataManuale("a", e.target.value));
 $("info").addEventListener("click", e => {
   const b = e.target.closest("button[data-chip]"); if (!b) return;
   const id = b.dataset.chip;
-  if (id === "date") { ui.da = ui.a = ""; $("fDa").value = $("fA").value = ""; }
+  if (id === "date") { applicaPeriodo("tutto"); syncPeriodoUi(); salvaUi(); }
   else if (id === "q") { ui.q = ""; $("q").value = ""; }
   else if (id.startsWith("f:")) delete (ui.filtri[ui.vista] || {})[id.slice(2)];
   nascondiTip(); render();
 });
 $("bReset").addEventListener("click", () => {
-  ui.da = ui.a = ui.q = ""; ui.filtri[ui.vista] = {};
-  $("fDa").value = $("fA").value = $("q").value = "";
+  ui.q = ""; ui.filtri[ui.vista] = {}; applicaPeriodo(PERIODO_DEF);
+  $("q").value = ""; syncPeriodoUi(); salvaUi();
   render();
 });
 $("bars").addEventListener("click", e => {
-  const b = e.target.closest(".b"); if (!b) return;
-  const g = b.dataset.g;
-  if (ui.da === g && ui.a === g) { ui.da = ui.a = ""; } else { ui.da = ui.a = g; }
-  $("fDa").value = ui.da; $("fA").value = ui.a;
-  render(true);
+  const el = e.target.closest(".b"); if (!el) return;
+  const b = BARRE[Number(el.dataset.i)];
+  if (ui.da === b.da && ui.a === b.a) {
+    if (ui.prima) { ({da:ui.da, a:ui.a, periodo:ui.periodo} = ui.prima); ui.prima = null; } else applicaPeriodo(PERIODO_DEF);
+  } else { ui.prima ||= {da:ui.da, a:ui.a, periodo:ui.periodo}; ui.da = b.da; ui.a = b.a; ui.periodo = "custom"; }
+  syncPeriodoUi(); nascondiTip(); render(true);
 });
-$("bSync").href = `https://github.com/${REPO}/actions/workflows/aggiorna.yml`;
+
+/* ---------- "Aggiorna ora": avvia direttamente la GitHub Action ---------- */
+const TOKEN = String((window.BOARD_CFG || {}).token || "");
+const ICO_AGG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12v9"/><path d="m8 17 4 4 4-4"/><path d="M20.4 16.6A5 5 0 0 0 18 7h-1.3A8 8 0 1 0 4 15.3"/></svg>`;
+const ICO_GIRA = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-9-9"/></svg>`;
+const pausa = ms => new Promise(r => setTimeout(r, ms));
+async function gh(path, opt = {}) {
+  const r = await fetch(`https://api.github.com/repos/${REPO}/actions${path}`, {...opt, cache: "no-store",
+    headers: {Accept: "application/vnd.github+json", Authorization: `Bearer ${TOKEN}`, "X-GitHub-Api-Version": "2022-11-28"}});
+  if (r.status === 401) throw new Error("il token non è valido o è scaduto: avvisa il referente della board");
+  if (r.status === 403 || r.status === 404) throw new Error("il token non ha il permesso di avviare l'aggiornamento: avvisa il referente della board");
+  if (!r.ok) throw new Error(`GitHub ha risposto ${r.status}`);
+  return r.status === 204 ? null : r.json();
+}
+const ultimoRun = async dopo => (await gh(`/workflows/aggiorna.yml/runs?per_page=1${dopo ? "&created=" + encodeURIComponent(">=" + dopo) : ""}`)).workflow_runs[0];
+function statoSync(testo) {
+  const b = $("bSync");
+  b.classList.toggle("spin", !!testo); b.setAttribute("aria-busy", !!testo);
+  b.querySelector("svg").outerHTML = testo ? ICO_GIRA : ICO_AGG;
+  b.querySelector("span").textContent = testo || "Aggiorna ora";
+}
+let syncInCorso = false;
+async function aggiornaOra(e) {
+  e.preventDefault(); nascondiTip();
+  if (syncInCorso) { toast("Aggiornamento già in corso, attendi qualche minuto"); return; }
+  syncInCorso = true;
+  try {
+    statoSync("Avvio…");
+    let run = await ultimoRun();
+    if (!run || run.status === "completed") {  // se ne sta già girando uno (automatico o di un collega) aspetto quello
+      const da = new Date(Date.now() - 60000).toISOString().slice(0, 19) + "Z";
+      await gh("/workflows/aggiorna.yml/dispatches", {method: "POST", body: JSON.stringify({ref: "main"})});
+      run = null;
+      for (let i = 0; i < 12 && !run; i++) { await pausa(5000); run = await ultimoRun(da); }
+      if (!run) throw new Error("l'aggiornamento non è partito, riprova tra poco");
+    }
+    const t0 = Date.now();
+    while (run.status !== "completed") {
+      if (Date.now() - t0 > 25 * 60000) throw new Error("l'aggiornamento sta impiegando troppo, riprova più tardi");
+      statoSync(run.status === "in_progress" ? "Scarico i dati…" : "In coda…");
+      await pausa(10000);
+      run = await gh(`/runs/${run.id}`);
+    }
+    if (run.conclusion !== "success") throw new Error("l'aggiornamento non è riuscito: avvisa il referente della board");
+    statoSync("Pubblico…");
+    const prima = DATI && DATI.aggiornato;
+    for (let i = 0; i < 12 && DATI && DATI.aggiornato === prima; i++) { await caricaDati(); if (DATI.aggiornato === prima) await pausa(10000); }
+    toast(DATI && DATI.aggiornato !== prima ? "Dati aggiornati" : "Aggiornamento completato: se non vedi i dati nuovi premi Ricarica tra un minuto");
+  } catch (err) {
+    toast("Aggiorna ora: " + err.message);
+  } finally {
+    syncInCorso = false; statoSync("");
+  }
+}
+if (TOKEN) {
+  const b = $("bSync");
+  b.removeAttribute("target"); b.href = "#";
+  b.dataset.tip = "Scarica subito i dati nuovi da QFieldCloud. Ci vogliono 2-3 minuti: la board si aggiorna da sola quando ha finito.<div class='hint'>Anche senza clic i dati si aggiornano da soli ogni 30 minuti nei giorni lavorativi.</div>";
+  statoSync("");
+  b.addEventListener("click", aggiornaOra);
+} else $("bSync").href = `https://github.com/${REPO}/actions/workflows/aggiorna.yml`;
 $("bRicarica").addEventListener("click", () => caricaDati(true));
 $("bXls").addEventListener("click", esporta);
 setInterval(() => { if (DATI) { renderSub(); renderBanner(); } }, 30000);

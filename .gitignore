@@ -3,6 +3,7 @@
 
 # dati generati
 sito/dati.json
+sito/config.js
 *.xlsx
 *.csv
 *.tmp

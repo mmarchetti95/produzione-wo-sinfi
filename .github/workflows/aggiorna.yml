@@ -1,6 +1,6 @@
 # Scarica i dati di produzione da QFieldCloud e pubblica la board su GitHub Pages.
 # Parte da sola (ogni 30 min, lun-sab, ~6-21 ora italiana), a ogni push su main
-# e a mano da Actions > "Aggiorna board" > Run workflow.
+# e a mano dal pulsante "Aggiorna ora" della board (o da Actions > "Aggiorna board" > Run workflow).
 name: Aggiorna board
 
 on:
@@ -42,7 +42,14 @@ jobs:
           QFC_URL: ${{ secrets.QFC_URL }}
           QFC_USER: ${{ secrets.QFC_USER }}
           QFC_PASSWORD: ${{ secrets.QFC_PASSWORD }}
-        run: python qfc_report.py --giorni 60 --json sito/dati.json
+        run: python qfc_report.py --giorni 365 --json sito/dati.json
+
+      # token del pulsante "Aggiorna ora": finisce solo nel sito pubblicato, mai nel repository
+      # (GitHub revoca in automatico i token trovati nel codice dei repository pubblici)
+      - name: Configura pulsante Aggiorna ora
+        env:
+          TOKEN: ${{ secrets.BOARD_DISPATCH_TOKEN }}
+        run: echo "window.BOARD_CFG = {token: \"$TOKEN\"};" > sito/config.js
 
       - uses: actions/configure-pages@v5
 
