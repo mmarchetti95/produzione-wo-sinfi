@@ -1,0 +1,54 @@
+# Scarica i dati di produzione da QFieldCloud e pubblica la board su GitHub Pages.
+# Parte da sola (ogni 30 min, lun-sab, ~6-21 ora italiana), a ogni push su main
+# e a mano da Actions > "Aggiorna board" > Run workflow.
+name: Aggiorna board
+
+on:
+  schedule:
+    - cron: "7,37 4-19 * * 1-6"   # orari in UTC
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  aggiorna:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Installa librerie
+        run: pip install -r requirements.txt
+
+      - name: Scarica dati da QFieldCloud
+        env:
+          QFC_URL: ${{ secrets.QFC_URL }}
+          QFC_USER: ${{ secrets.QFC_USER }}
+          QFC_PASSWORD: ${{ secrets.QFC_PASSWORD }}
+        run: python qfc_report.py --giorni 60 --json sito/dati.json
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: sito
+
+      - id: deploy
+        uses: actions/deploy-pages@v4

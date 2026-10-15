@@ -1,0 +1,9 @@
+# credenziali: MAI nel repository (sono nei Secrets di GitHub)
+.env
+
+# dati generati
+sito/dati.json
+*.xlsx
+*.csv
+*.tmp
+__pycache__/

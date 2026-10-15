@@ -1,0 +1,923 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Produzione WO SINFI</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root {
+  color-scheme: light;
+  --bg:#f3f4f6; --card:#ffffff; --border:#e2e4e8; --line:#eef0f3;
+  --ink:#111827; --ink2:#4b5563; --muted:#6b7280;
+  --accent:#1f6feb; --accent-ink:#ffffff; --accent-soft:#e8f0fe;
+  --bar:#cfe0fb; --neg:#c0262d; --warn-bg:#fff4e0; --warn:#9a5b00;
+  --head:#f8f9fb; --zebra:#fafbfc; --hover:#f1f6ff; --grp:#eaf1fd;
+  --tip-bg:#1f2937; --tip-ink:#f9fafb;
+  --shadow: 0 1px 2px rgba(16,24,40,.06), 0 1px 3px rgba(16,24,40,.08);
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  color-scheme: dark;
+  --bg:#0f1115; --card:#171a20; --border:#2a2f38; --line:#222730;
+  --ink:#eef0f3; --ink2:#b7bdc8; --muted:#8a919e;
+  --accent:#4a8cf7; --accent-ink:#ffffff; --accent-soft:#1b2a44;
+  --bar:#24426e; --neg:#ff7b7b; --warn-bg:#3a2a10; --warn:#f3c26b;
+  --head:#1c2027; --zebra:#191c22; --hover:#1d2533; --grp:#1a2538;
+  --tip-bg:#e5e7eb; --tip-ink:#111827;
+  --shadow: none;
+} }
+* { box-sizing: border-box }
+body { margin:0; background:var(--bg); color:var(--ink);
+  font:14px/1.45 "Segoe UI", system-ui, -apple-system, Roboto, sans-serif }
+main { max-width:1280px; margin:0 auto; padding:20px 16px 48px }
+button, select, input { font:inherit; color:inherit }
+.num { text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap }
+code { font-family:Consolas, "Cascadia Mono", monospace; font-size:.92em; background:var(--line); padding:1px 5px; border-radius:4px }
+
+/* header */
+header { display:flex; flex-wrap:wrap; gap:12px 20px; align-items:flex-end; justify-content:space-between; margin-bottom:16px }
+h1 { font-size:24px; margin:0; letter-spacing:-.01em }
+.sub { color:var(--ink2); margin-top:2px }
+.sub b { color:var(--ink); font-weight:600 }
+.sync { display:flex; flex-wrap:wrap; gap:8px; align-items:center }
+.btn { border:1px solid var(--border); background:var(--card); border-radius:8px; padding:7px 12px;
+  cursor:pointer; display:inline-flex; gap:6px; align-items:center; box-shadow:var(--shadow) }
+.btn:hover { border-color:var(--accent) }
+.btn:disabled { opacity:.6; cursor:default }
+.btn.primary { background:var(--accent); border-color:var(--accent); color:var(--accent-ink); font-weight:600 }
+.btn.primary:hover { filter:brightness(1.08) }
+a.btn { text-decoration:none; color:inherit }
+.btn svg { width:16px; height:16px; flex:none }
+.spin svg { animation: giro 1s linear infinite }
+@keyframes giro { to { transform: rotate(360deg) } }
+select, input[type=date], input[type=search] { border:1px solid var(--border); background:var(--card);
+  border-radius:8px; padding:6px 10px; min-height:34px }
+label.chk { display:inline-flex; gap:6px; align-items:center; color:var(--ink2); font-size:13px; cursor:pointer }
+.sep { width:1px; height:24px; background:var(--border); margin:0 2px }
+.progress { height:3px; background:var(--line); border-radius:3px; overflow:hidden; margin:-8px 0 14px; visibility:hidden }
+.progress.on { visibility:visible }
+.progress i { display:block; height:100%; width:0; background:var(--accent); transition:width .3s }
+.banner { border-radius:10px; padding:10px 14px; margin-bottom:14px; display:none }
+.banner.err { display:block; background:#fde8e8; color:#8a1c1c; border:1px solid #f5c2c2 }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .banner.err { background:#3b1717; color:#ffb4b4; border-color:#5c2626 } }
+
+/* KPI */
+.kpis { display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:10px; margin-bottom:14px }
+.kpi { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:12px 14px; box-shadow:var(--shadow); cursor:help }
+.kpi .l { color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.04em; font-weight:600 }
+.kpi .v { font-size:24px; font-weight:700; margin-top:2px; font-variant-numeric:tabular-nums }
+.kpi .v small { font-size:13px; color:var(--muted); font-weight:500; margin-left:3px }
+
+/* grafico */
+.card { background:var(--card); border:1px solid var(--border); border-radius:12px; box-shadow:var(--shadow) }
+.chart { padding:12px 14px 8px; margin-bottom:14px }
+.chart-h { display:flex; justify-content:space-between; gap:8px; color:var(--ink2); font-size:13px; margin-bottom:6px }
+.bars { display:flex; align-items:flex-end; gap:3px; height:110px; border-bottom:1px solid var(--border) }
+.bars .b { flex:1; min-width:4px; position:relative; height:100%; display:flex; align-items:flex-end; cursor:pointer; border-radius:4px 4px 0 0 }
+.bars .b i { display:block; width:100%; background:var(--accent); border-radius:4px 4px 0 0; opacity:.85; min-height:1px }
+.bars .b.we i { opacity:.45 }
+.bars .b.out i { opacity:.18 }
+.bars .b.zero i { background:var(--border) }
+.bars .b.neg i { background:var(--neg) }
+.bars .b:hover i, .bars .b.sel i { opacity:1; outline:2px solid var(--accent); outline-offset:1px }
+.bars .b:hover { background:var(--hover) }
+.xlab { display:flex; gap:3px; font-size:11px; color:var(--muted); margin-top:4px }
+.xlab span { flex:1; min-width:4px; text-align:center; white-space:nowrap; overflow:visible }
+
+/* tooltip */
+.tip { position:fixed; pointer-events:none; background:var(--tip-bg); color:var(--tip-ink); padding:8px 11px;
+  border-radius:8px; font-size:12.5px; line-height:1.45; display:none; z-index:50; max-width:360px;
+  box-shadow:0 6px 20px rgba(0,0,0,.25) }
+.tip .ctx { opacity:.7; font-size:11.5px; margin-bottom:3px }
+.tip .big { font-size:14px; font-weight:700 }
+.tip .hint { opacity:.7; font-size:11.5px; margin-top:4px }
+.tip code { background:rgba(127,127,127,.25); color:inherit }
+
+/* toolbar */
+.toolbar { display:flex; flex-wrap:wrap; gap:8px; align-items:center; padding:10px 12px; border-bottom:1px solid var(--border) }
+.tabs { display:flex; gap:2px; background:var(--bg); border-radius:9px; padding:3px; flex-wrap:wrap }
+.tabs button { border:0; background:transparent; padding:5px 10px; border-radius:7px; cursor:pointer; color:var(--ink2) }
+.tabs button[aria-selected=true] { background:var(--card); color:var(--ink); font-weight:600; box-shadow:var(--shadow) }
+.spacer { flex:1 }
+.range { display:flex; gap:6px; align-items:center; color:var(--muted) }
+input[type=search] { min-width:150px; width:190px }
+.info { color:var(--muted); font-size:13px; padding:8px 12px; display:flex; flex-wrap:wrap; gap:8px; align-items:center; border-bottom:1px solid var(--border) }
+.chips { display:flex; flex-wrap:wrap; gap:8px; align-items:center }
+.info .btn { padding:5px 10px; font-size:13px }
+.chip { background:var(--accent-soft); color:var(--accent); border-radius:999px; padding:2px 8px 2px 10px; font-size:12px; display:inline-flex; gap:4px; align-items:center }
+.chip button { border:0; background:none; color:inherit; cursor:pointer; padding:0 2px; font-size:14px; line-height:1 }
+.linkbtn { border:0; background:none; color:var(--accent); cursor:pointer; padding:0; font:inherit; text-decoration:underline }
+
+/* tabella */
+.tw { overflow:auto; max-height:calc(100vh - 220px); min-height:240px }
+table { border-collapse:separate; border-spacing:0; width:100%; min-width:720px }
+th, td { padding:7px 12px; border-bottom:1px solid var(--line); text-align:left }
+thead th { position:sticky; z-index:2; background:var(--head) }
+thead tr.h th { top:0; font-size:12px; color:var(--ink2); font-weight:600; cursor:pointer; user-select:none; white-space:nowrap; border-bottom:1px solid var(--border) }
+thead tr.h th:hover { color:var(--ink) }
+thead tr.h th .ar { display:inline-block; width:12px; color:var(--accent) }
+thead tr.f th { top:34px; padding:5px 6px; border-bottom:1px solid var(--border) }
+thead tr.f input { width:100%; min-width:60px; border:1px solid var(--border); border-radius:6px; padding:4px 7px;
+  background:var(--card); font-size:12px }
+thead tr.f input:focus { outline:2px solid var(--accent); outline-offset:-1px }
+thead tr.f input.on { border-color:var(--accent); background:var(--accent-soft) }
+tbody tr:nth-child(even) td { background-color:var(--zebra) }
+tbody.grouped tr:nth-child(even) td { background-color:transparent }
+tbody.grouped tr:hover td { background-color:var(--hover) }
+tbody tr:hover td { background-color:var(--hover) }
+td.t-testo.k0 { font-weight:600 }
+td.neg { color:var(--neg) }
+.kb { display:inline-block; width:56px; height:8px; background:var(--line); border-radius:4px; margin-right:10px; vertical-align:middle; overflow:hidden }
+.kb i { display:block; height:100%; background:var(--accent); opacity:.55; border-radius:4px }
+td.dim { color:var(--muted) }
+td.t-data { white-space:nowrap }
+/* separatore giorno nella vista Dettaglio */
+tbody tr.grp td { background-color:var(--grp) !important; font-weight:700; border-top:2px solid var(--accent);
+  border-bottom:1px solid var(--border); padding-top:9px; padding-bottom:9px; cursor:help }
+tbody tr.grp:first-child td { border-top:0 }
+tr.grp .gd { font-size:14px }
+tr.grp .gs { color:var(--ink2); font-weight:500; margin-left:8px; font-size:12.5px }
+tbody tr.grp + tr td { padding-top:9px }
+td.gday { color:transparent }
+tfoot td { position:sticky; bottom:0; background-color:var(--head); font-weight:700; border-top:1px solid var(--border); border-bottom:0 }
+.vuoto { padding:40px; color:var(--muted); text-align:center }
+details.avvisi { margin-top:12px; color:var(--ink2); font-size:13px }
+details.avvisi summary { cursor:pointer; color:var(--warn) }
+details.avvisi li { margin:3px 0 }
+.note { color:var(--muted); font-size:12px; margin-top:10px }
+.help { color:var(--muted); font-size:12px }
+.toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:var(--tip-bg); color:var(--tip-ink);
+  padding:9px 16px; border-radius:8px; opacity:0; transition:opacity .25s; pointer-events:none; z-index:60 }
+.toast.on { opacity:1 }
+
+/* guida */
+dialog.guida { border:1px solid var(--border); border-radius:14px; padding:0; width:min(860px, calc(100vw - 32px));
+  max-height:calc(100vh - 48px); overflow:hidden; background:var(--card); color:var(--ink); box-shadow:0 20px 60px rgba(0,0,0,.35) }
+dialog.guida::backdrop { background:rgba(10,14,20,.5) }
+.g-head { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 20px; border-bottom:1px solid var(--border);
+  position:sticky; top:0; background:var(--card); z-index:1 }
+.g-head h2 { margin:0; font-size:19px }
+.g-wrap { display:grid; grid-template-columns:200px 1fr; grid-template-rows:100%; height:min(760px, calc(100vh - 120px)) }
+.g-nav { border-right:1px solid var(--border); padding:12px 8px; overflow:auto; min-height:0 }
+.g-nav button { display:block; width:100%; text-align:left; border:0; background:none; padding:6px 10px; border-radius:7px;
+  cursor:pointer; color:var(--ink2); font-size:13px }
+.g-nav button:hover, .g-nav button.on { background:var(--accent-soft); color:var(--accent) }
+.g-body { padding:6px 24px 28px; overflow:auto; line-height:1.55; position:relative; min-height:0 }
+.g-body h3 { font-size:16px; margin:22px 0 6px; padding-top:4px }
+.g-body h4 { font-size:14px; margin:14px 0 4px }
+.g-body p, .g-body li { color:var(--ink2) }
+.g-body b { color:var(--ink) }
+.g-body ul, .g-body ol { padding-left:20px; margin:6px 0 }
+.g-body li { margin:3px 0 }
+.g-body table { min-width:0; margin:8px 0 12px; font-size:13px; border:1px solid var(--border); border-radius:8px; overflow:hidden }
+.g-body th { background:var(--head); position:static; font-size:12px; color:var(--ink2) }
+.g-body th, .g-body td { padding:6px 10px; vertical-align:top }
+.esempio { background:var(--accent-soft); border-radius:10px; padding:10px 14px; margin:10px 0; color:var(--ink2) }
+.esempio b { color:var(--ink) }
+.attenz { background:var(--warn-bg); border-radius:10px; padding:10px 14px; margin:10px 0; color:var(--ink2) }
+@media (max-width:720px) {
+  input[type=search] { min-width:0; width:100% } .tw { max-height:70vh } h1 { font-size:20px }
+  .g-wrap { grid-template-columns:1fr } .g-nav { display:none } .sep { display:none }
+}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div>
+      <h1>Produzione WO SINFI</h1>
+      <div class="sub" id="sub">Caricamento…</div>
+    </div>
+    <div class="sync">
+      <button class="btn" id="bGuida" data-tip="Spiegazione completa: come funziona la board e come leggere i numeri">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><path d="M9.3 9.2a2.8 2.8 0 0 1 5.4 1c0 1.9-2.7 2.5-2.7 4"/><path d="M12 17.3h.01"/></svg>
+        Guida</button>
+      <button class="btn" id="bRicarica" data-tip="Ricarica gli ultimi dati pubblicati (la pagina lo fa comunque da sola ogni 5 minuti)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
+        <span>Ricarica</span></button>
+      <a class="btn primary" id="bSync" target="_blank" rel="noopener"
+        data-tip="Apre su GitHub l'aggiornamento dei dati: clic su <b>Run workflow</b>. In 2-3 minuti la board si aggiorna.<div class='hint'>Serve un account GitHub con accesso al repository. Senza, i dati si aggiornano comunque da soli ogni 30 minuti nei giorni lavorativi.</div>">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6"/><path d="M20 4 10 14"/><path d="M19 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/></svg>
+        <span>Aggiorna ora</span></a>
+    </div>
+  </header>
+  <div class="banner" id="banner"></div>
+
+  <section class="kpis" id="kpis"></section>
+
+  <section class="card chart">
+    <div class="chart-h"><span>Km netti per giorno <span class="help">· clic su una barra per vedere solo quel giorno</span></span><span id="chartTot"></span></div>
+    <div class="bars" id="bars"></div>
+    <div class="xlab" id="xlab"></div>
+  </section>
+
+  <section class="card">
+    <div class="toolbar">
+      <div class="tabs" role="tablist" id="tabs"></div>
+      <div class="range">
+        <input type="date" id="fDa" aria-label="Dal" data-tip="Mostra i dati <b>dal</b> giorno indicato (giorno di sincronizzazione)"> –
+        <input type="date" id="fA" aria-label="Al" data-tip="Mostra i dati <b>fino al</b> giorno indicato (compreso)">
+      </div>
+      <input type="search" id="q" placeholder="Cerca operatore, progetto, layer…" aria-label="Cerca"
+        data-tip="Cerca in operatore, progetto e layer insieme. Più parole separate da virgola = una qualsiasi (es. <code>rperri, FGN</code>). Con <code>!</code> escludi (es. <code>!test</code>).">
+    </div>
+    <div class="info"><span id="info" class="chips"></span><span class="spacer"></span>
+      <button class="btn" id="bReset" data-tip="Toglie periodo, ricerca e filtri di colonna della vista corrente">Azzera filtri</button>
+      <button class="btn" id="bXls" data-tip="Scarica in Excel <b>esattamente</b> la tabella a schermo: stessa vista, stessi filtri, stesso ordinamento. Nel foglio <i>Info</i> trovi i filtri applicati.">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+        Esporta Excel</button>
+    </div>
+    <div class="tw" id="tw">
+      <table>
+        <thead id="th"></thead>
+        <tbody id="tb"></tbody>
+        <tfoot id="tf"></tfoot>
+      </table>
+    </div>
+  </section>
+
+  <details class="avvisi" id="avvisi" hidden><summary></summary><ul></ul></details>
+  <p class="note">
+    <b>Km netti</b> = linee nuove + allungamenti − accorciamenti − cancellazioni · <b>Km nuovi</b> = solo linee create ·
+    i giorni sono quelli di <b>sincronizzazione</b> (ora italiana). Passa il mouse su colonne e celle per i dettagli,
+    oppure apri la <button class="linkbtn" id="bGuida2">Guida</button>.
+  </p>
+</main>
+
+<dialog class="guida" id="guida" aria-labelledby="gTit">
+  <div class="g-head">
+    <h2 id="gTit">Guida alla board di produzione</h2>
+    <button class="btn" id="gChiudi" aria-label="Chiudi la guida">Chiudi ✕</button>
+  </div>
+  <div class="g-wrap">
+    <nav class="g-nav" id="gNav"></nav>
+    <div class="g-body" id="gBody">
+
+<h3 id="g-cosa">1. A cosa serve</h3>
+<p>La board mostra <b>quanto lavoro hanno prodotto gli operatori</b> sui progetti QFieldCloud: quanti km di linee hanno
+disegnato, quanti elementi hanno creato, modificato o cancellato, giorno per giorno, operatore per operatore e progetto per progetto.</p>
+<p>Serve per controllare l'avanzamento, confrontare la resa degli operatori e preparare i riepiloghi in Excel.</p>
+
+<h3 id="g-dati">2. Da dove arrivano i dati</h3>
+<ol>
+  <li>L'operatore lavora in campo con <b>QField</b> sul tablet o sul telefono.</li>
+  <li>Quando <b>sincronizza</b>, QField invia a QFieldCloud ogni singola modifica fatta: un elemento creato, uno modificato, uno cancellato. Ogni modifica si chiama <b>delta</b>.</li>
+  <li>Un programma automatico su GitHub legge tutti i delta dei progetti e li somma per <b>giorno, operatore, progetto e layer</b>, poi pubblica il risultato su questa pagina.</li>
+</ol>
+<div class="attenz"><b>Importante: il giorno è quello di sincronizzazione, non quello del disegno.</b><br>
+Se un operatore disegna venerdì ma sincronizza lunedì, tutto il suo lavoro compare <b>lunedì</b>. Un giorno "vuoto" seguito
+da un giorno molto alto spesso vuol dire proprio questo. Gli orari sono in ora italiana.</div>
+
+<h3 id="g-sync">3. Aggiornamento dei dati</h3>
+<ul>
+  <li>I dati si aggiornano <b>da soli ogni 30 minuti</b>, dal lunedì al sabato tra le 6 e le 21 circa. Non serve installare nulla: basta aprire la pagina.</li>
+  <li>Sotto il titolo trovi il periodo coperto e <b>quando</b> sono stati aggiornati i dati (es. <i>aggiornati 5 min fa</i>).</li>
+  <li>La pagina ricarica da sola i dati nuovi ogni 5 minuti; il bottone <b>Ricarica</b> lo fa subito.</li>
+  <li><b>Aggiorna ora</b> apre su GitHub l'aggiornamento manuale: clic su <i>Run workflow</i> e dopo 2-3 minuti premi <b>Ricarica</b>. Serve un account GitHub con accesso al repository.</li>
+  <li>Il periodo scaricato sono gli <b>ultimi 60 giorni</b>. I progetti fermi da molto tempo (nessuna attività da oltre 30 giorni prima del periodo) vengono saltati per fare prima: lo trovi scritto negli avvisi in fondo.</li>
+</ul>
+
+<h3 id="g-numeri">4. Come leggere i numeri</h3>
+<table>
+  <thead><tr><th>Colonna</th><th>Cosa significa</th></tr></thead>
+  <tbody>
+    <tr><td><b>Km netti</b></td><td>Quanta rete è stata <b>effettivamente aggiunta</b>: linee nuove + allungamenti − accorciamenti − linee cancellate. È il dato di produzione principale.</td></tr>
+    <tr><td><b>Km nuovi</b></td><td>Lunghezza delle sole <b>linee create</b>: la produzione "lorda", senza tener conto di modifiche e cancellazioni.</td></tr>
+    <tr><td><b>Create</b></td><td>Quanti elementi sono stati creati: linee, punti (es. pozzetti, pali) e poligoni.</td></tr>
+    <tr><td><b>Modificate</b></td><td>Quante modifiche sono state sincronizzate, sia alla geometria sia agli attributi. Lo stesso elemento modificato 3 volte conta 3.</td></tr>
+    <tr><td><b>Cancellate</b></td><td>Quanti elementi sono stati cancellati.</td></tr>
+    <tr><td><b>Giorni attivi</b></td><td>In quanti giorni diversi c'è stata almeno una sincronizzazione.</td></tr>
+    <tr><td><b>Km/giorno</b></td><td>Km netti ÷ giorni attivi: la resa media in un giorno di lavoro.</td></tr>
+    <tr><td><b>Operatori / Progetti</b></td><td>Quanti operatori o progetti diversi sono coinvolti in quella riga. Passa il mouse sul numero per vedere i nomi.</td></tr>
+  </tbody>
+</table>
+<div class="esempio"><b>Esempio.</b> In una giornata un operatore:
+<ol><li>disegna 3 linee nuove da 1 km ciascuna;</li><li>allunga una linea vecchia di 0,2 km;</li><li>cancella una linea sbagliata da 0,5 km.</li></ol>
+Risultato: <b>Km nuovi = 3,00</b> (solo il punto 1) · <b>Km netti = 3,00 + 0,20 − 0,50 = 2,70</b> · Create = 3 · Modificate = 1 · Cancellate = 1.</div>
+<h4>Come interpretarli</h4>
+<ul>
+  <li><b>Km netti vicini ai km nuovi</b>: l'operatore ha disegnato e quasi nulla è stato rifatto.</li>
+  <li><b>Km nuovi molto più alti dei km netti</b>: molto lavoro è stato cancellato o accorciato. Possibili correzioni o rilavorazioni da verificare.</li>
+  <li><b>Km netti negativi (in rosso)</b>: in quella riga si è tolta più rete di quanta ne sia stata disegnata, ad esempio una pulizia di linee errate.</li>
+  <li><b>Km a zero ma con elementi creati o modificati</b>: l'operatore ha lavorato su punti (che non hanno lunghezza) o solo sugli attributi.</li>
+  <li>I km contano <b>solo le linee</b>: punti e poligoni compaiono nelle colonne Create/Modificate/Cancellate ma non nei km.</li>
+</ul>
+<h4>I riquadri in alto</h4>
+<p>Riassumono <b>quello che vedi in tabella</b>, quindi cambiano con la vista e con i filtri. <b>Km medi operatore/giorno</b> = km netti ÷ giornate-operatore,
+dove una giornata-operatore è un operatore che ha sincronizzato in un certo giorno (3 operatori per 2 giorni = 6 giornate).</p>
+<h4>Il grafico</h4>
+<p>Ogni barra è un giorno del periodo scaricato: l'altezza sono i km netti. Le barre più chiare sono sabato e domenica, quelle grigie sono giorni
+senza produzione. <b>Clic su una barra</b> per vedere solo quel giorno, clic di nuovo per tornare al periodo intero. Il grafico segue la ricerca e i filtri
+su operatore, progetto e layer, ma mostra sempre tutto il periodo.</p>
+
+<h3 id="g-viste">5. Le viste</h3>
+<table>
+  <thead><tr><th>Vista</th><th>Una riga per…</th><th>Utile per</th></tr></thead>
+  <tbody>
+    <tr><td><b>Dettaglio</b></td><td>giorno + operatore + progetto</td><td>vedere chi ha fatto cosa ogni giorno. Quando è ordinata per giorno, i giorni sono separati da una riga blu con i totali della giornata.</td></tr>
+    <tr><td><b>Per operatore</b></td><td>operatore</td><td>confrontare la resa: totale km, giorni attivi, km al giorno.</td></tr>
+    <tr><td><b>Per progetto</b></td><td>progetto</td><td>vedere l'avanzamento di ogni cantiere.</td></tr>
+    <tr><td><b>Per giorno</b></td><td>giorno</td><td>l'andamento quotidiano della squadra.</td></tr>
+    <tr><td><b>Per layer</b></td><td>progetto + layer</td><td>capire su quali strati si lavora (es. condotte, pozzetti). Il nome del layer è quello interno di QGIS.</td></tr>
+  </tbody>
+</table>
+<p>L'ultima vista scelta e il suo ordinamento vengono ricordati alla prossima apertura.</p>
+
+<h3 id="g-filtri">6. Filtrare e ordinare</h3>
+<h4>Filtri generali</h4>
+<ul>
+  <li><b>Date dal / al</b>: limitano il periodo mostrato, dentro quello scaricato.</li>
+  <li><b>Cerca</b>: cerca contemporaneamente in operatore, progetto e layer.</li>
+</ul>
+<h4>Filtri di colonna</h4>
+<p>Sotto ogni intestazione c'è una casella. Si scrive e la tabella si aggiorna subito.</p>
+<table>
+  <thead><tr><th>Scrivi</th><th>Ottieni</th></tr></thead>
+  <tbody>
+    <tr><td><code>rperri</code></td><td>righe che contengono "rperri" (maiuscole e minuscole indifferenti)</td></tr>
+    <tr><td><code>rperri, hsemry</code></td><td>righe di rperri <b>oppure</b> hsemry</td></tr>
+    <tr><td><code>!test</code></td><td>tutte le righe <b>tranne</b> quelle che contengono "test"</td></tr>
+    <tr><td><code>FGN, !Cis</code></td><td>progetti che contengono FGN, escluso Cis</td></tr>
+    <tr><td><code>&gt;5</code> · <code>&gt;=5</code></td><td>maggiore di 5 · maggiore o uguale a 5</td></tr>
+    <tr><td><code>&lt;0</code></td><td>valori negativi (utile sui km netti per trovare le cancellazioni)</td></tr>
+    <tr><td><code>2..10</code></td><td>tra 2 e 10, estremi compresi</td></tr>
+    <tr><td><code>0</code> · <code>!=0</code></td><td>uguale a zero · diverso da zero</td></tr>
+    <tr><td><code>1,5</code> · <code>&gt;0,5</code></td><td>i decimali si scrivono con la virgola</td></tr>
+    <tr><td><code>12/10</code> · <code>/10/</code> · <code>sab</code></td><td>sulla colonna Giorno: il 12 ottobre · tutto ottobre · tutti i sabati</td></tr>
+  </tbody>
+</table>
+<p>I filtri attivi compaiono come etichette blu sopra la tabella: la <b>×</b> ne toglie uno, <b>Azzera filtri</b> li toglie tutti.
+Ogni vista ha i suoi filtri di colonna.</p>
+<h4>Ordinare</h4>
+<p><b>Clic sull'intestazione</b> di una colonna per ordinare: il primo clic mette in cima i valori più alti (o le date più recenti, o A→Z per i testi),
+il secondo inverte. La freccia blu indica la colonna usata.</p>
+<h4>Totali</h4>
+<p>L'ultima riga della tabella, sempre visibile, somma le righe <b>filtrate</b>. Per Giorni attivi, Operatori e Progetti indica quanti sono
+<b>diversi</b> in tutto, non la somma.</p>
+
+<h3 id="g-excel">7. Esportare in Excel</h3>
+<ul>
+  <li><b>Esporta Excel</b> scarica esattamente la tabella a schermo: stessa vista, stessi filtri, stesso ordinamento.</li>
+  <li>Il file ha i filtri di Excel già attivi e una riga <b>Totale</b> che si ricalcola se filtri anche dentro Excel.</li>
+  <li>Il foglio <b>Info</b> riporta vista, data di esportazione, data di aggiornamento dei dati e filtri applicati.</li>
+  <li>Il file finisce nella cartella <i>Download</i> del browser con un nome del tipo <code>produzione_operatore_2026-10-13.xlsx</code>.</li>
+</ul>
+
+<h3 id="g-limiti">8. Avvisi e limiti da conoscere</h3>
+<ul>
+  <li><b>Geometrie scartate</b>: una linea più lunga di 50 km in un solo elemento è quasi certamente un errore di sistema di coordinate e non viene conteggiata. Se succede, compare un avviso in fondo alla pagina con il nome del progetto.</li>
+  <li><b>Lavoro non ancora applicato</b>: le modifiche sincronizzate ma rimaste in conflitto o non applicate sul server vengono comunque contate, perché l'operatore le ha fatte. Se un numero non torna con quello che vedi in QGIS, controlla lo stato delle modifiche in QFieldCloud.</li>
+  <li><b>Progetti saltati</b>: se la board ha saltato progetti inattivi lo trovi scritto negli avvisi.</li>
+  <li><b>Nomi dei layer</b>: sono mostrati senza il codice tecnico finale che QGIS aggiunge (es. <code>TR_ELE_UNITO_ab68…</code> diventa <code>TR_ELE_UNITO</code>). Passa il mouse sul nome per vedere quello completo.</li>
+  <li><b>Righe mostrate</b>: per velocità la tabella mostra al massimo 3.000 righe; l'export Excel le contiene sempre tutte.</li>
+  <li>Il nome mostrato per l'operatore è il suo <b>utente QFieldCloud</b>.</li>
+</ul>
+
+<h3 id="g-problemi">9. Se qualcosa non va</h3>
+<table>
+  <thead><tr><th>Messaggio o sintomo</th><th>Cosa fare</th></tr></thead>
+  <tbody>
+    <tr><td>"Impossibile caricare i dati"</td><td>Controlla la connessione e premi <b>Ricarica</b>. Se persiste, avvisa il referente della board.</td></tr>
+    <tr><td>"Dati vecchi di oltre …"</td><td>Gli aggiornamenti automatici non stanno andando a buon fine (es. password QFieldCloud cambiata): avvisa il referente della board, che trova l'errore nella scheda <i>Actions</i> del repository.</td></tr>
+    <tr><td>Manca un progetto</td><td>Può essere stato saltato perché inattivo (vedi avvisi) oppure l'utente della board non vede quel progetto in QFieldCloud: avvisa il referente.</td></tr>
+    <tr><td>Un giorno ha zero km ma so che si è lavorato</td><td>L'operatore probabilmente non ha ancora sincronizzato: il lavoro comparirà nel giorno in cui lo farà.</td></tr>
+  </tbody>
+</table>
+    </div>
+  </div>
+</dialog>
+
+<div class="tip" id="tip" role="tooltip"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+const GG = ["dom","lun","mar","mer","gio","ven","sab"];
+const nf = (d) => new Intl.NumberFormat("it-IT", {minimumFractionDigits:d, maximumFractionDigits:d});
+const F = {km: nf(2), dec: nf(2), int: nf(0)};
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const dIt = iso => { const [y,m,d] = iso.split("-"); return `${d}/${m}/${y}`; };
+const dObj = iso => { const [y,m,d] = iso.split("-").map(Number); return new Date(y, m-1, d); };
+const dIso = dt => `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,"0")}-${String(dt.getDate()).padStart(2,"0")}`;
+const dLab = iso => `${GG[dObj(iso).getDay()]} ${dIt(iso)}`;
+const dLungo = iso => { const s = dObj(iso).toLocaleDateString("it-IT", {weekday:"long", day:"numeric", month:"long", year:"numeric"}); return s[0].toUpperCase() + s.slice(1); };
+const plur = (n, s, p) => `${F.int.format(n)} ${n === 1 ? s : p}`;
+const elenco = (set, max = 10) => { const a = [...set].sort((x, y) => x.localeCompare(y, "it")); return esc(a.slice(0, max).join(", ")) + (a.length > max ? ` e altri ${a.length - max}` : ""); };
+
+/* ---------- colonne e viste ---------- */
+const COL = {
+  giorno:       {l:"Giorno",        t:"data",  d:"Giorno in cui il lavoro è stato <b>sincronizzato</b> su QFieldCloud (ora italiana). Non è per forza il giorno in cui è stato disegnato."},
+  operatore:    {l:"Operatore",     t:"testo", d:"Utente QFieldCloud che ha sincronizzato le modifiche."},
+  progetto:     {l:"Progetto",      t:"testo", d:"Progetto QFieldCloud in cui sono state fatte le modifiche."},
+  layer:        {l:"Layer",         t:"testo", d:"Strato del progetto (nome interno di QGIS) in cui sono state fatte le modifiche."},
+  km_netti:     {l:"Km netti",      t:"km", bar:true, d:"Rete <b>effettivamente aggiunta</b>: linee nuove + allungamenti − accorciamenti − linee cancellate. È il dato di produzione principale; in rosso se negativo."},
+  km_nuovi:     {l:"Km nuovi",      t:"km",    d:"Lunghezza delle sole <b>linee create</b> (produzione lorda), senza contare modifiche e cancellazioni."},
+  create:       {l:"Create",        t:"int",   d:"Elementi creati: linee, punti e poligoni."},
+  modificate:   {l:"Modificate",    t:"int",   d:"Modifiche sincronizzate, alla geometria o agli attributi. Lo stesso elemento modificato 3 volte conta 3."},
+  cancellate:   {l:"Cancellate",    t:"int",   d:"Elementi cancellati."},
+  giorni_attivi:{l:"Giorni attivi", t:"int",   d:"Giorni diversi con almeno una sincronizzazione."},
+  km_al_giorno: {l:"Km/giorno",     t:"dec",   d:"Km netti ÷ giorni attivi: la resa media in un giorno di lavoro."},
+  n_operatori:  {l:"Operatori",     t:"int",   d:"Quanti operatori diversi hanno lavorato. Passa il mouse sul numero per i nomi."},
+  n_progetti:   {l:"Progetti",      t:"int",   d:"Su quanti progetti diversi si è lavorato. Passa il mouse sul numero per i nomi."},
+};
+const MET = ["km_netti","km_nuovi","create","modificate","cancellate"];
+const VISTE = {
+  dettaglio: {l:"Dettaglio",     key:["giorno","operatore","progetto"], extra:[], sort:[["giorno",-1],["km_netti",-1]],
+              d:"Una riga per giorno + operatore + progetto. Ordinata per giorno, mostra un separatore con i totali di ogni giornata."},
+  operatore: {l:"Per operatore", key:["operatore"], extra:["giorni_attivi","km_al_giorno","n_progetti"], sort:[["km_netti",-1]],
+              d:"Una riga per operatore: totale del periodo, giorni attivi e resa media al giorno."},
+  progetto:  {l:"Per progetto",  key:["progetto"],  extra:["giorni_attivi","n_operatori"], sort:[["km_netti",-1]],
+              d:"Una riga per progetto: avanzamento di ogni cantiere nel periodo."},
+  giorno:    {l:"Per giorno",    key:["giorno"],    extra:["n_operatori","n_progetti"], sort:[["giorno",-1]],
+              d:"Una riga per giorno: andamento quotidiano di tutta la squadra."},
+  layer:     {l:"Per layer",     key:["progetto","layer"], extra:["n_operatori"], sort:[["progetto",1],["km_netti",-1]],
+              d:"Una riga per progetto + layer: su quali strati si lavora."},
+};
+const colonne = v => [...VISTE[v].key, ...MET, ...VISTE[v].extra];
+const isNum = k => !["testo","data"].includes(COL[k].t);
+
+/* ---------- stato UI (vista e ordinamento ricordati nel browser) ---------- */
+const REPO = "mmarchetti95/produzione-wo-sinfi";
+let DATI = null;
+let ui = {vista:"dettaglio", sort:{}, filtri:{}, q:"", da:"", a:""};
+try { const s = JSON.parse(localStorage.getItem("board_ui") || "{}"); ui.vista = s.vista || ui.vista; ui.sort = s.sort || {}; } catch(e) {}
+if (!VISTE[ui.vista]) ui.vista = "dettaglio";
+for (const v in ui.sort) ui.sort[v] = (ui.sort[v] || []).filter(s => COL[s[0]]);
+const salvaUi = () => { try { localStorage.setItem("board_ui", JSON.stringify({vista:ui.vista, sort:ui.sort})); } catch(e) {} };
+
+/* ---------- filtri ---------- */
+function matchTesto(val, f) {
+  const parti = f.split(",").map(s => s.trim().toLowerCase()).filter(Boolean);
+  if (!parti.length) return true;
+  const s = String(val).toLowerCase();
+  const pos = parti.filter(p => !p.startsWith("!")), neg = parti.filter(p => p.startsWith("!")).map(p => p.slice(1)).filter(Boolean);
+  return (!pos.length || pos.some(p => s.includes(p))) && !neg.some(p => s.includes(p));
+}
+function parseNum(s) { s = String(s).trim(); return Number(s.includes(",") ? s.replace(/\./g, "").replace(",", ".") : s); }
+function matchNum(v, f) {
+  f = f.trim(); if (!f) return true;
+  let m;
+  if ((m = f.match(/^(-?[\d.,]+)\s*\.\.\s*(-?[\d.,]+)$/))) return v >= parseNum(m[1]) - 1e-9 && v <= parseNum(m[2]) + 1e-9;
+  if ((m = f.match(/^(>=|<=|>|<|=|!=|<>)\s*(-?[\d.,]+)$/))) {
+    const n = parseNum(m[2]);
+    return {">=":v>=n-1e-9, "<=":v<=n+1e-9, ">":v>n, "<":v<n, "=":Math.abs(v-n)<5e-3, "!=":Math.abs(v-n)>=5e-3, "<>":Math.abs(v-n)>=5e-3}[m[1]];
+  }
+  const n = parseNum(f);
+  return isNaN(n) ? true : Math.abs(v - n) < 5e-3;
+}
+function testoCella(k, v) { return COL[k].t === "data" ? dLab(v) : v; }
+
+/* ---------- calcolo ---------- */
+function righeBase() {
+  const R = DATI ? DATI.righe : [];
+  const q = ui.q.trim();
+  return R.filter(r => (!ui.da || r.giorno >= ui.da) && (!ui.a || r.giorno <= ui.a) &&
+    (!q || matchTesto(`${r.operatore} ${r.progetto} ${r.layer}`, q)));
+}
+function aggrega(R, vista) {
+  const V = VISTE[vista], acc = new Map();
+  for (const r of R) {
+    const k = V.key.map(c => r[c]).join("\u0001");
+    let a = acc.get(k);
+    if (!a) { a = {_src:[], _g:new Set(), _o:new Set(), _p:new Set(), _l:new Set()}; V.key.forEach(c => a[c] = r[c]); MET.forEach(m => a[m] = 0); acc.set(k, a); }
+    MET.forEach(m => a[m] += r[m]);
+    a._src.push(r); a._g.add(r.giorno); a._o.add(r.operatore); a._p.add(r.progetto); a._l.add(r.layer);
+  }
+  for (const a of acc.values()) {
+    a.giorni_attivi = a._g.size; a.n_operatori = a._o.size; a.n_progetti = a._p.size;
+    a.km_al_giorno = a.giorni_attivi ? a.km_netti / a.giorni_attivi : 0;
+  }
+  return [...acc.values()];
+}
+function filtraColonne(rows, cols) {
+  const fv = ui.filtri[ui.vista] || {};
+  const att = cols.filter(k => fv[k]);
+  if (!att.length) return rows;
+  return rows.filter(r => att.every(k => isNum(k) ? matchNum(r[k], fv[k]) : matchTesto(testoCella(k, r[k]), fv[k])));
+}
+const ordAttivo = () => ui.sort[ui.vista] && ui.sort[ui.vista].length ? ui.sort[ui.vista] : VISTE[ui.vista].sort;
+function ordina(rows) {
+  const s = ordAttivo();
+  return rows.sort((x, y) => {
+    for (const [k, dir] of s) {
+      const a = x[k], b = y[k];
+      const c = typeof a === "number" ? a - b : String(a).localeCompare(String(b), "it", {numeric:true, sensitivity:"base"});
+      if (c) return c * dir;
+    }
+    return 0;
+  });
+}
+let VISIBILI = [], COLS = [], TOT = {}, GRUPPI = {};
+function calcola() {
+  COLS = colonne(ui.vista);
+  VISIBILI = ordina(filtraColonne(aggrega(righeBase(), ui.vista), COLS));
+}
+const raggruppato = () => ui.vista === "dettaglio" && ordAttivo()[0][0] === "giorno";
+
+/* ---------- render ---------- */
+function fmt(k, v) {
+  const t = COL[k].t;
+  if (t === "data") return dLab(v);
+  if (t === "testo") return esc(v);
+  return F[t].format(v);
+}
+function renderHead() {
+  const s = ordAttivo(), fv = ui.filtri[ui.vista] || {};
+  const h = COLS.map(k => {
+    const dir = s[0][0] === k ? s[0][1] : 0;
+    const ar = `<span class="ar">${dir ? (dir > 0 ? "▲" : "▼") : ""}</span>`;
+    return `<th data-k="${k}" class="${isNum(k) ? "num" : ""}" aria-sort="${dir > 0 ? "ascending" : dir < 0 ? "descending" : "none"}">${isNum(k) ? ar + COL[k].l : COL[k].l + " " + ar}</th>`;
+  }).join("");
+  const f = COLS.map(k => {
+    const ph = isNum(k) ? "es. >0" : COL[k].t === "data" ? "es. 12/10, lun" : "filtra…";
+    return `<th><input data-f="${k}" class="${fv[k] ? "on" : ""}" value="${esc(fv[k]||"")}" placeholder="${ph}" aria-label="Filtro ${COL[k].l}" ${isNum(k) ? 'style="text-align:right"' : ""}></th>`;
+  }).join("");
+  $("th").innerHTML = `<tr class="h">${h}</tr><tr class="f">${f}</tr>`;
+}
+const LIMITE = 3000;
+function cella(r, k, i, maxKm, nascondiGiorno) {
+  const t = COL[k].t, v = r[k];
+  let cls = `t-${t} k${VISTE[ui.vista].key.indexOf(k)}`;
+  if (isNum(k)) cls += " num";
+  if (typeof v === "number" && v < -0.0005) cls += " neg";
+  if (typeof v === "number" && Math.abs(v) < 0.0005 && k !== "km_netti") cls += " dim";
+  if (nascondiGiorno && k === "giorno") cls += " gday";
+  let html = fmt(k, v);
+  if (COL[k].bar) html = `<span class="kb"><i style="width:${(Math.max(0, v) / maxKm * 100).toFixed(1)}%"></i></span>${html}`;
+  return `<td class="${cls}" data-k="${k}">${html}</td>`;
+}
+function renderBody() {
+  const maxKm = Math.max(0.0001, ...VISIBILI.map(r => Math.abs(r.km_netti)));
+  const R = VISIBILI.slice(0, LIMITE), grp = raggruppato();
+  // totali per giorno (su tutte le righe visibili, non solo le prime LIMITE)
+  GRUPPI = {};
+  if (grp) for (const r of VISIBILI) {
+    const g = GRUPPI[r.giorno] ||= {n:0, o:new Set(), p:new Set(), ...Object.fromEntries(MET.map(m => [m, 0]))};
+    g.n++; g.o.add(r.operatore); g.p.add(r.progetto); MET.forEach(m => g[m] += r[m]);
+  }
+  let out = "", ultimo = null;
+  R.forEach((r, i) => {
+    if (grp && r.giorno !== ultimo) {
+      ultimo = r.giorno;
+      const g = GRUPPI[r.giorno], nk = VISTE[ui.vista].key.length;
+      out += `<tr class="grp" data-g="${r.giorno}"><td colspan="${nk}" data-k="_grp"><span class="gd">${dLab(r.giorno)}</span>` +
+        `<span class="gs">${plur(g.o.size, "operatore", "operatori")} · ${plur(g.p.size, "progetto", "progetti")}</span></td>` +
+        COLS.slice(nk).map(k => `<td class="num${g[k] < -0.0005 ? " neg" : ""}" data-k="${k}">${k in g ? fmt(k, g[k]) : ""}</td>`).join("") + "</tr>";
+    }
+    out += `<tr data-i="${i}">` + COLS.map(k => cella(r, k, i, maxKm, grp)).join("") + "</tr>";
+  });
+  if (VISIBILI.length > LIMITE) out += `<tr><td colspan="${COLS.length}" class="vuoto">Mostrate le prime ${LIMITE} righe su ${VISIBILI.length}: l'export Excel le contiene tutte.</td></tr>`;
+  const tb = $("tb");
+  tb.classList.toggle("grouped", grp);
+  tb.innerHTML = out || `<tr><td colspan="${COLS.length}" class="vuoto">${DATI ? "Nessun dato per questi filtri" : "Nessun dato disponibile"}</td></tr>`;
+  // totali
+  const src = VISIBILI.flatMap(r => r._src);
+  TOT = {_n: VISIBILI.length, _g:new Set(src.map(r => r.giorno)), _o:new Set(src.map(r => r.operatore)), _p:new Set(src.map(r => r.progetto))};
+  MET.forEach(m => TOT[m] = VISIBILI.reduce((s, r) => s + r[m], 0));
+  TOT.giorni_attivi = TOT._g.size; TOT.km_al_giorno = TOT._g.size ? TOT.km_netti / TOT._g.size : 0;
+  TOT.n_operatori = TOT._o.size; TOT.n_progetti = TOT._p.size;
+  const nk = VISTE[ui.vista].key.length;
+  $("tf").innerHTML = VISIBILI.length ? `<tr>${COLS.map((k, i) => i === 0 ? `<td colspan="${nk}" data-k="_tot">Totale · ${VISIBILI.length} righe</td>`
+    : i < nk ? "" : `<td class="num${TOT[k] < -0.0005 ? " neg" : ""}" data-k="${k}">${fmt(k, TOT[k])}</td>`).join("")}</tr>` : "";
+  return src;
+}
+function renderKpi(src) {
+  const s = m => src.reduce((a, r) => a + r[m], 0);
+  const ops = new Set(src.map(r => r.operatore)), prj = new Set(src.map(r => r.progetto));
+  const gOp = new Set(src.map(r => r.operatore + "|" + r.giorno)).size;
+  const kn = s("km_netti"), kv = s("km_nuovi");
+  const nota = "<div class='hint'>Calcolato su quello che vedi in tabella (vista e filtri attuali).</div>";
+  const k = [
+    ["Km netti", F.km.format(kn), "km", `<b>Km netti</b>: ${COL.km_netti.d}${nota}`],
+    ["Km nuovi", F.km.format(kv), "km", `<b>Km nuovi</b>: ${COL.km_nuovi.d}` +
+      (kv > 0 ? `<br>Differenza con i netti: <b>${F.km.format(kv - kn)} km</b> tolti da accorciamenti e cancellazioni.` : "") + nota],
+    ["Elementi creati", F.int.format(s("create")), "", `<b>Elementi creati</b>: linee, punti e poligoni nuovi.<br>Modificate: ${F.int.format(s("modificate"))} · Cancellate: ${F.int.format(s("cancellate"))}${nota}`],
+    ["Operatori attivi", F.int.format(ops.size), "", ops.size ? `<b>Operatori con almeno una sincronizzazione:</b><br>${elenco(ops, 20)}` : "Nessun operatore"],
+    ["Km medi operatore/giorno", F.dec.format(gOp ? kn / gOp : 0), "km",
+      `<b>Resa media di un operatore in un giorno di lavoro.</b><br>${F.km.format(kn)} km netti ÷ ${plur(gOp, "giornata-operatore", "giornate-operatore")}.<div class='hint'>Una giornata-operatore = un operatore che ha sincronizzato in un giorno (3 operatori per 2 giorni = 6).</div>`],
+    ["Progetti attivi", F.int.format(prj.size), "", prj.size ? `<b>Progetti con attività:</b><br>${elenco(prj, 20)}` : "Nessun progetto"],
+  ];
+  $("kpis").innerHTML = k.map(([l, v, u, t]) => `<div class="kpi" data-tip="${esc(t)}"><div class="l">${l}</div><div class="v">${v}${u ? `<small>${u}</small>` : ""}</div></div>`).join("");
+}
+// righe per il grafico: stessa ricerca e filtri su operatore/progetto/layer, ma tutto il periodo
+let CHART = {};
+function righeGrafico() {
+  if (!DATI) return [];
+  const fv = ui.filtri[ui.vista] || {}, q = ui.q.trim();
+  return DATI.righe.filter(r => (!q || matchTesto(`${r.operatore} ${r.progetto} ${r.layer}`, q)) &&
+    ["operatore","progetto","layer"].every(k => !fv[k] || !COLS.includes(k) || matchTesto(r[k], fv[k])));
+}
+function renderChart(src) {
+  if (!DATI) { $("bars").innerHTML = ""; $("xlab").innerHTML = ""; return; }
+  CHART = {};
+  src.forEach(r => { const c = CHART[r.giorno] ||= {km:0, kv:0, c:0, o:new Set()}; c.km += r.km_netti; c.kv += r.km_nuovi; c.c += r.create; c.o.add(r.operatore); });
+  const giorni = [];
+  for (let d = dObj(DATI.dal); dIso(d) <= DATI.al; d.setDate(d.getDate() + 1)) giorni.push(dIso(d));
+  const max = Math.max(0.001, ...giorni.map(g => Math.abs(CHART[g]?.km || 0)));
+  const passo = Math.max(1, Math.ceil(giorni.length / 12));
+  $("bars").innerHTML = giorni.map(g => {
+    const v = CHART[g]?.km || 0, h = Math.abs(v) / max * 100, we = [0,6].includes(dObj(g).getDay());
+    const sel = ui.da === g && ui.a === g, out = (ui.da && g < ui.da) || (ui.a && g > ui.a);
+    return `<div class="b${we ? " we" : ""}${v === 0 ? " zero" : ""}${v < 0 ? " neg" : ""}${sel ? " sel" : ""}${out ? " out" : ""}" data-g="${g}"><i style="height:${Math.max(h, 0.8)}%"></i></div>`;
+  }).join("");
+  $("xlab").innerHTML = giorni.map((g, i) => `<span>${i % passo === 0 ? g.slice(8) + "/" + g.slice(5, 7) : ""}</span>`).join("");
+  $("chartTot").textContent = `${F.km.format(Object.values(CHART).reduce((x, c) => x + c.km, 0))} km in ${giorni.length} giorni`;
+}
+function renderInfo() {
+  const chips = [];
+  if (ui.da || ui.a) chips.push(["date", `Periodo: ${ui.da ? dIt(ui.da) : "…"} – ${ui.a ? dIt(ui.a) : "…"}`]);
+  if (ui.q) chips.push(["q", `Cerca: ${ui.q}`]);
+  Object.entries(ui.filtri[ui.vista] || {}).forEach(([k, v]) => v && COLS.includes(k) && chips.push(["f:" + k, `${COL[k].l}: ${v}`]));
+  $("info").innerHTML = `<span>${plur(VISIBILI.length, "riga", "righe")}</span>` +
+    chips.map(([id, t]) => `<span class="chip">${esc(t)}<button data-chip="${esc(id)}" aria-label="Rimuovi filtro" data-tip="Togli questo filtro">×</button></span>`).join("");
+}
+function render(soloCorpo) {
+  calcola();
+  if (!soloCorpo) renderHead();
+  const src = renderBody();
+  renderKpi(src); renderChart(righeGrafico()); renderInfo();
+  $("bReset").disabled = !(ui.da || ui.a || ui.q || Object.values(ui.filtri[ui.vista] || {}).some(Boolean));
+}
+function descrizioneFiltri() {
+  const f = [];
+  if (ui.da || ui.a) f.push(`Periodo ${ui.da ? dIt(ui.da) : "inizio"} - ${ui.a ? dIt(ui.a) : "fine"}`);
+  if (ui.q) f.push(`Ricerca: ${ui.q}`);
+  Object.entries(ui.filtri[ui.vista] || {}).forEach(([k, v]) => v && COLS.includes(k) && f.push(`${COL[k].l}: ${v}`));
+  return f;
+}
+
+/* ---------- tooltip ---------- */
+const H = {
+  testo: "Scrivi parte del nome. Più valori separati da virgola = uno qualsiasi (es. <code>rperri, hsemry</code>). Con <code>!</code> escludi (es. <code>!test</code>).",
+  data: "Scrivi parte della data o del giorno: <code>12/10</code> (un giorno), <code>/10/</code> (tutto ottobre), <code>sab</code> (tutti i sabati).",
+  num: "<code>&gt;5</code> maggiore di 5 · <code>&lt;0</code> negativi · <code>2..10</code> tra 2 e 10 · <code>0</code> uguale a zero · <code>!=0</code> diverso da zero. Decimali con la virgola.",
+};
+function contesto(r) {
+  const p = [];
+  if ("giorno" in r && VISTE[ui.vista].key.includes("giorno")) p.push(dLab(r.giorno));
+  ["operatore","progetto","layer"].forEach(k => VISTE[ui.vista].key.includes(k) && p.push(esc(r[k])));
+  return `<div class="ctx">${p.join(" · ")}</div>`;
+}
+function spiegaKm(kn, kv) {
+  const d = kn - kv;
+  let s = `<div class="big">${F.km.format(kn)} km netti</div>`;
+  if (Math.abs(d) < 0.0005) s += `Tutti da linee nuove (${F.km.format(kv)} km), nessuna modifica di lunghezza o cancellazione.`;
+  else s += `= ${F.km.format(kv)} km di linee nuove ${d > 0 ? "+" : "−"} ${F.km.format(Math.abs(d))} km ${d > 0 ? "da allungamenti di linee esistenti" : "tolti da accorciamenti e cancellazioni"}.`;
+  if (kn < -0.0005) s += `<div class="hint">Negativo: qui si è tolta più rete di quanta ne sia stata disegnata.</div>`;
+  else if (Math.abs(kn) < 0.0005 && kv < 0.0005) s += `<div class="hint">Nessun km: probabilmente lavoro su punti o solo sugli attributi.</div>`;
+  return s;
+}
+function tipValore(k, r, tot) {
+  const v = r[k], ogg = tot ? "in totale" : "";
+  switch (k) {
+    case "giorno":    return `<div class="big">${dLungo(v)}</div>Giorno di sincronizzazione (ora italiana).`;
+    case "operatore": return `<div class="big">${esc(v)}</div>Utente QFieldCloud.` + (r._p ? `<br>Progetti: ${elenco(r._p)}` : "") +
+                             (r._g && ui.vista !== "dettaglio" ? `<br>Giorni attivi: ${r._g.size}` : "");
+    case "progetto":  return `<div class="big">${esc(v)}</div>Progetto QFieldCloud.` + (r._o ? `<br>Operatori: ${elenco(r._o)}` : "");
+    case "layer":     return `<div class="big">${esc(v)}</div>Layer QGIS. Nome completo: ${elenco(new Set((r._src || []).map(x => x.layer_id)), 3)}` + (r._o ? `<br>Operatori: ${elenco(r._o)}` : "");
+    case "km_netti":  return spiegaKm(r.km_netti, r.km_nuovi);
+    case "km_nuovi":  return `<div class="big">${F.km.format(v)} km nuovi</div>Lunghezza delle linee create ${ogg}. Gli elementi creati sono ${F.int.format(r.create)} (compresi eventuali punti e poligoni, che non hanno km).`;
+    case "create":    return `<div class="big">${plur(v, "elemento creato", "elementi creati")}</div>Linee, punti e poligoni nuovi.`;
+    case "modificate":return `<div class="big">${plur(v, "modifica", "modifiche")}</div>Modifiche sincronizzate alla geometria o agli attributi. Lo stesso elemento può contare più volte.`;
+    case "cancellate":return `<div class="big">${plur(v, "elemento cancellato", "elementi cancellati")}</div>` + (v ? "Le linee cancellate vengono sottratte dai km netti." : "");
+    case "giorni_attivi": { const g = [...(r._g || [])].sort();
+      return `<div class="big">${plur(v, "giorno attivo", "giorni attivi")}</div>` + (g.length ? `Dal ${dLab(g[0])} al ${dLab(g[g.length - 1])}.` : ""); }
+    case "km_al_giorno": return `<div class="big">${F.dec.format(v)} km al giorno</div>${F.km.format(r.km_netti)} km netti ÷ ${plur(r.giorni_attivi, "giorno attivo", "giorni attivi")}.`;
+    case "n_operatori": return `<div class="big">${plur(v, "operatore", "operatori")}</div>${elenco(r._o || [], 20)}`;
+    case "n_progetti":  return `<div class="big">${plur(v, "progetto", "progetti")}</div>${elenco(r._p || [], 20)}`;
+  }
+  return "";
+}
+function tipPer(el) {
+  if (el.dataset.tip) return el.dataset.tip;
+  // intestazioni
+  if (el.matches("tr.h th[data-k]")) { const k = el.dataset.k;
+    return `<div class="big">${COL[k].l}</div>${COL[k].d}<div class="hint">Clic per ordinare · di nuovo per invertire</div>`; }
+  if (el.matches("tr.f input[data-f]")) { const k = el.dataset.f;
+    return `<b>Filtra ${COL[k].l}</b><br>${isNum(k) ? H.num : H[COL[k].t]}`; }
+  if (el.matches("#tabs button")) return `<b>${VISTE[el.dataset.v].l}</b><br>${VISTE[el.dataset.v].d}`;
+  // barre grafico
+  if (el.matches(".bars .b")) { const g = el.dataset.g, c = CHART[g];
+    return `<div class="big">${dLab(g)}</div>` + (c ? `${F.km.format(c.km)} km netti · ${F.km.format(c.kv)} km nuovi<br>${plur(c.c, "elemento creato", "elementi creati")} · ${plur(c.o.size, "operatore", "operatori")}` : "Nessuna sincronizzazione") +
+      `<div class="hint">${ui.da === g && ui.a === g ? "Clic per tornare a tutto il periodo" : "Clic per vedere solo questo giorno"}</div>`; }
+  // celle
+  const k = el.dataset.k, tr = el.parentElement;
+  if (!k) return "";
+  if (tr.closest("tfoot")) {
+    if (k === "_tot") return `<b>Totale delle ${plur(TOT._n, "riga visibile", "righe visibili")}</b><br>Tiene conto di vista, periodo, ricerca e filtri di colonna.`;
+    if (["giorni_attivi","n_operatori","n_progetti"].includes(k)) {
+      const set = {giorni_attivi:null, n_operatori:TOT._o, n_progetti:TOT._p}[k];
+      return `<b>${COL[k].l} diversi in totale: ${F.int.format(TOT[k])}</b>` + (set ? `<br>${elenco(set, 20)}` : "") + `<div class="hint">Non è la somma della colonna: un operatore o un giorno conta una volta sola.</div>`;
+    }
+    if (k === "km_al_giorno") return `<b>Media complessiva</b><br>${F.km.format(TOT.km_netti)} km netti ÷ ${plur(TOT.giorni_attivi, "giorno", "giorni")} con attività.`;
+    return `<div class="ctx">Totale righe visibili</div>` + tipValore(k, {...TOT, _o:TOT._o, _p:TOT._p}, true);
+  }
+  if (tr.classList.contains("grp")) {
+    const g = GRUPPI[tr.dataset.g];
+    if (k === "_grp") return `<div class="big">${dLungo(tr.dataset.g)}</div>Totale della giornata: ${F.km.format(g.km_netti)} km netti, ${plur(g.n, "riga", "righe")}.<br>Operatori: ${elenco(g.o)}<br>Progetti: ${elenco(g.p)}`;
+    return `<div class="ctx">Totale del ${dLab(tr.dataset.g)}</div>` + tipValore(k, g, true);
+  }
+  const r = VISIBILI[Number(tr.dataset.i)];
+  return r ? contesto(r) + tipValore(k, r) : "";
+}
+const TIP = $("tip"); let tipEl = null, tipT = null, mx = 0, my = 0;
+function posTip() {
+  const w = TIP.offsetWidth, h = TIP.offsetHeight;
+  let x = mx + 14, y = my + 18;
+  if (x + w > innerWidth - 8) x = mx - w - 14;
+  if (y + h > innerHeight - 8) y = my - h - 12;
+  TIP.style.left = Math.max(8, x) + "px"; TIP.style.top = Math.max(8, y) + "px";
+}
+function nascondiTip() { clearTimeout(tipT); TIP.style.display = "none"; tipEl = null; }
+document.addEventListener("mouseover", e => {
+  if ($("guida").open) return;
+  const el = e.target.closest("[data-tip], tr.h th[data-k], tr.f input[data-f], #tabs button, .bars .b, #tb td[data-k], #tf td[data-k]");
+  if (el === tipEl) return;
+  tipEl = el; clearTimeout(tipT);
+  if (!el) { TIP.style.display = "none"; return; }
+  const mostra = () => { const h = tipPer(el); if (!h) { TIP.style.display = "none"; return; } TIP.innerHTML = h; TIP.style.display = "block"; posTip(); };
+  if (TIP.style.display === "block") mostra(); else tipT = setTimeout(mostra, 280);
+});
+document.addEventListener("mousemove", e => { mx = e.clientX; my = e.clientY; if (TIP.style.display === "block") posTip(); });
+document.addEventListener("mousedown", nascondiTip);
+document.addEventListener("scroll", nascondiTip, true);
+document.addEventListener("mouseleave", nascondiTip);
+
+/* ---------- header / dati ---------- */
+function renderSub() {
+  if (!DATI) { $("sub").textContent = "Nessun dato disponibile"; return; }
+  const agg = new Date(DATI.aggiornato);
+  const min = Math.round((Date.now() - agg) / 60000);
+  const quando = min < 1 ? "adesso" : min < 60 ? `${min} min fa` : agg.toLocaleString("it-IT", {day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit"});
+  const p = DATI.progetti || {};
+  $("sub").innerHTML = `Dati dal <b>${dIt(DATI.dal)}</b> al <b>${dIt(DATI.al)}</b> · aggiornati <b data-tip="Ultima sincronizzazione: ${agg.toLocaleString("it-IT")}${DATI.durata != null ? ` (durata ${Math.round(DATI.durata)} s)` : ""}">${quando}</b> · ` +
+    `<span data-tip="Progetti letti da QFieldCloud nell'ultima sincronizzazione${p.saltati ? `; ${p.saltati} saltati perché inattivi` : ""}${p.errori ? `; ${p.errori} non leggibili (vedi avvisi in fondo)` : ""}.">${p.letti ?? "?"} progetti letti</span>`;
+}
+function renderAvvisi() {
+  const A = (DATI && DATI.avvisi) || [], el = $("avvisi");
+  el.hidden = !A.length;
+  el.querySelector("summary").textContent = `${A.length} avvis${A.length === 1 ? "o" : "i"} dall'ultima sincronizzazione`;
+  el.querySelector("ul").innerHTML = A.map(a => `<li>${esc(a)}</li>`).join("");
+}
+// nome del layer senza il suffisso tecnico di QGIS (_uuid o timestamp di creazione)
+const pulisciLayer = s => String(s).replace(/_?[0-9a-f]{8}(_[0-9a-f]{4}){3}_[0-9a-f]{12}$/i, "").replace(/_?\d{17}$/, "") || String(s);
+function impostaDati(d) {
+  const prima = DATI && DATI.aggiornato;
+  d.righe.forEach(r => { r.layer_id = r.layer; r.layer = pulisciLayer(r.layer); });
+  DATI = d;
+  if (prima !== DATI.aggiornato) {
+    if (ui.da && ui.da < DATI.dal) ui.da = "";
+    if (ui.a && ui.a > DATI.al) ui.a = "";
+  }
+  $("fDa").min = $("fA").min = DATI.dal; $("fDa").max = $("fA").max = DATI.al;
+  $("fDa").value = ui.da; $("fA").value = ui.a;
+}
+const ORE_DATI_VECCHI = 36;  // oltre: gli aggiornamenti automatici probabilmente falliscono
+function renderBanner(err) {
+  const ban = $("banner");
+  const ore = DATI ? (Date.now() - new Date(DATI.aggiornato)) / 3600000 : 0;
+  if (err) { ban.className = "banner err"; ban.textContent = `Impossibile caricare i dati (${err}). Controlla la connessione e premi Ricarica.`; }
+  else if (ore > ORE_DATI_VECCHI) { ban.className = "banner err"; ban.textContent = `Dati vecchi di oltre ${Math.floor(ore)} ore: gli aggiornamenti automatici non stanno andando a buon fine. Avvisa il referente della board.`; }
+  else ban.className = "banner";
+}
+
+let primoCaricamento = true;
+async function caricaDati(manuale) {
+  try {
+    const r = await fetch(`dati.json?t=${Date.now()}`, {cache: "no-store"});
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const d = await r.json();
+    const nuovi = !DATI || d.aggiornato !== DATI.aggiornato;
+    if (nuovi) { impostaDati(d); renderAvvisi(); render(); }
+    renderSub(); renderBanner();
+    if (manuale) toast(nuovi ? "Dati aggiornati" : "Nessun dato nuovo da mostrare");
+    else if (nuovi && !primoCaricamento) toast("Dati aggiornati");
+    primoCaricamento = false;
+  } catch (e) {
+    renderBanner(e.message);
+    if (!DATI) { $("sub").textContent = "Dati non disponibili"; $("bXls").disabled = true; }
+  }
+}
+
+/* ---------- export Excel (nel browser, con SheetJS) ---------- */
+const XFMT = {km: "#,##0.000", mq: "#,##0", int: "#,##0", dec: "#,##0.00", data: "dd/mm/yyyy"};
+const NON_SOMMARE = ["giorni_attivi", "n_operatori", "n_progetti", "km_al_giorno"];
+function foglioXlsx(colonne, righe) {
+  const aoa = [colonne.map(k => COL[k].l)];
+  // date come numero seriale Excel: evita sfasamenti di fuso orario
+  const seriale = iso => { const [y, m, d] = iso.split("-").map(Number); return (Date.UTC(y, m - 1, d) - Date.UTC(1899, 11, 30)) / 86400000; };
+  righe.forEach(r => aoa.push(colonne.map(k => COL[k].t === "data" ? seriale(r[k]) : typeof r[k] === "number" ? Math.round(r[k] * 10000) / 10000 : r[k])));
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  const n = righe.length;
+  colonne.forEach((k, j) => {
+    const fmtCol = XFMT[COL[k].t];
+    if (fmtCol) for (let i = 1; i <= n; i++) { const c = ws[XLSX.utils.encode_cell({r: i, c: j})]; if (c) c.z = fmtCol; }
+  });
+  if (n) {
+    const L = j => XLSX.utils.encode_col(j);
+    ws["!autofilter"] = {ref: `A1:${L(colonne.length - 1)}${n + 1}`};
+    XLSX.utils.sheet_add_aoa(ws, [["Totale (righe visibili)"]], {origin: {r: n + 1, c: 0}});
+    colonne.forEach((k, j) => {
+      if (j === 0 || !isNum(k) || NON_SOMMARE.includes(k)) return;
+      ws[XLSX.utils.encode_cell({r: n + 1, c: j})] = {t: "n", f: `SUBTOTAL(109,${L(j)}2:${L(j)}${n + 1})`, z: XFMT[COL[k].t]};
+    });
+    ws["!ref"] = `A1:${L(colonne.length - 1)}${n + 2}`;
+  }
+  ws["!cols"] = colonne.map(k => ({wch: Math.min(45, Math.max(11, COL[k].l.length + 3, ...righe.slice(0, 500).map(r => String(r[k] ?? "").length + 3)))}));
+  return ws;
+}
+function esporta() {
+  calcola();
+  try {
+    if (!window.XLSX) throw new Error("libreria Excel non caricata, controlla la connessione");
+    const titolo = VISTE[ui.vista].l, file = `produzione_${ui.vista}_${dIso(new Date())}`;
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, foglioXlsx(COLS, VISIBILI), titolo.slice(0, 31));
+    const info = [["Vista", titolo], ["Esportato il", new Date().toLocaleString("it-IT")],
+      ["Dati aggiornati al", DATI ? new Date(DATI.aggiornato).toLocaleString("it-IT") : ""], ["Righe", VISIBILI.length],
+      ...descrizioneFiltri().map(f => ["Filtro", f])];
+    const wsInfo = XLSX.utils.aoa_to_sheet(info);
+    wsInfo["!cols"] = [{wch: 24}, {wch: 90}];
+    XLSX.utils.book_append_sheet(wb, wsInfo, "Info");
+    XLSX.writeFile(wb, `${file}.xlsx`);
+    toast(`Excel esportato · ${plur(VISIBILI.length, "riga", "righe")}`);
+  } catch (e) { toast("Export non riuscito: " + e.message); }
+}
+let tt;
+function toast(msg) { const t = $("toast"); t.textContent = msg; t.classList.add("on"); clearTimeout(tt); tt = setTimeout(() => t.classList.remove("on"), 2800); }
+
+/* ---------- guida ---------- */
+const gBody = $("gBody");
+$("gNav").innerHTML = [...gBody.querySelectorAll("h3")].map(h => `<button data-g="${h.id}">${h.textContent.replace(/^\d+\.\s*/, "")}</button>`).join("");
+$("gNav").addEventListener("click", e => {
+  const b = e.target.closest("button[data-g]"); if (!b) return;
+  gBody.scrollTo({top: $(b.dataset.g).offsetTop - 8, behavior: "smooth"});
+});
+gBody.addEventListener("scroll", () => {
+  let att = null;
+  gBody.querySelectorAll("h3").forEach(h => { if (h.offsetTop - gBody.scrollTop < 60) att = h.id; });
+  $("gNav").querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.g === att));
+});
+const apriGuida = () => { nascondiTip(); $("guida").showModal(); gBody.scrollTop = 0; gBody.dispatchEvent(new Event("scroll")); };
+$("bGuida").addEventListener("click", apriGuida);
+$("bGuida2").addEventListener("click", apriGuida);
+$("gChiudi").addEventListener("click", () => $("guida").close());
+$("guida").addEventListener("click", e => { if (e.target === $("guida")) $("guida").close(); });
+
+/* ---------- eventi ---------- */
+$("tabs").innerHTML = Object.entries(VISTE).map(([k, v]) => `<button role="tab" data-v="${k}" aria-selected="${k === ui.vista}">${v.l}</button>`).join("");
+$("tabs").addEventListener("click", e => {
+  const b = e.target.closest("button[data-v]"); if (!b) return;
+  ui.vista = b.dataset.v;
+  $("tabs").querySelectorAll("button").forEach(x => x.setAttribute("aria-selected", x === b));
+  salvaUi(); render();
+});
+$("th").addEventListener("click", e => {
+  const th = e.target.closest("tr.h th[data-k]"); if (!th) return;
+  const k = th.dataset.k, cur = ordAttivo();
+  const dir = cur[0][0] === k ? -cur[0][1] : (isNum(k) || COL[k].t === "data" ? -1 : 1);
+  ui.sort[ui.vista] = [[k, dir], ...VISTE[ui.vista].sort.filter(s => s[0] !== k)];
+  salvaUi(); render();
+});
+let deb;
+$("th").addEventListener("input", e => {
+  const inp = e.target.closest("input[data-f]"); if (!inp) return;
+  (ui.filtri[ui.vista] ||= {})[inp.dataset.f] = inp.value;
+  inp.classList.toggle("on", !!inp.value);
+  clearTimeout(deb); deb = setTimeout(() => render(true), 150);
+});
+$("q").addEventListener("input", e => { ui.q = e.target.value; clearTimeout(deb); deb = setTimeout(() => render(true), 150); });
+$("fDa").addEventListener("change", e => { ui.da = e.target.value; render(true); });
+$("fA").addEventListener("change", e => { ui.a = e.target.value; render(true); });
+$("info").addEventListener("click", e => {
+  const b = e.target.closest("button[data-chip]"); if (!b) return;
+  const id = b.dataset.chip;
+  if (id === "date") { ui.da = ui.a = ""; $("fDa").value = $("fA").value = ""; }
+  else if (id === "q") { ui.q = ""; $("q").value = ""; }
+  else if (id.startsWith("f:")) delete (ui.filtri[ui.vista] || {})[id.slice(2)];
+  nascondiTip(); render();
+});
+$("bReset").addEventListener("click", () => {
+  ui.da = ui.a = ui.q = ""; ui.filtri[ui.vista] = {};
+  $("fDa").value = $("fA").value = $("q").value = "";
+  render();
+});
+$("bars").addEventListener("click", e => {
+  const b = e.target.closest(".b"); if (!b) return;
+  const g = b.dataset.g;
+  if (ui.da === g && ui.a === g) { ui.da = ui.a = ""; } else { ui.da = ui.a = g; }
+  $("fDa").value = ui.da; $("fA").value = ui.a;
+  render(true);
+});
+$("bSync").href = `https://github.com/${REPO}/actions/workflows/aggiorna.yml`;
+$("bRicarica").addEventListener("click", () => caricaDati(true));
+$("bXls").addEventListener("click", esporta);
+setInterval(() => { if (DATI) { renderSub(); renderBanner(); } }, 30000);
+setInterval(() => { if (!document.hidden) caricaDati(); }, 5 * 60000);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) caricaDati(); });
+
+caricaDati();
+</script>
+</body>
+</html>
