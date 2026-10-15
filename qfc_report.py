@@ -217,6 +217,14 @@ def ha_sync(r):
     return any(r[m] for m in METRICHE if m != "foto")
 
 
+def ore_lavoro(r):
+    """Orario lavorativo in ore: dalla prima all'ultima foto (None se non ci sono foto)."""
+    if not r.get("inizio"):
+        return None
+    (h0, m0), (h1, m1) = (map(int, r[k].split(":")) for k in ("inizio", "fine"))
+    return (h1 * 60 + m1 - h0 * 60 - m0) / 60
+
+
 def ultima_attivita(p):
     """Data (locale) dell'ultima attività nota del progetto, None se il server non la espone."""
     date_ = [ts(p.get(k)) for k in ("data_last_updated_at", "updated_at", "data_last_packaged_at")]
@@ -378,20 +386,22 @@ def raggruppa(righe, chiavi):
     for a in acc.values():
         a["giorni_attivi"] = len(a.pop("_g"))
         a["km_al_giorno"] = a["km_netti"] / a["giorni_attivi"] if a["giorni_attivi"] else 0
+        a["ore"] = ore_lavoro(a)
         out.append(a)
     return out
 
 
 # ------------------------------------------------------------------ Excel ---
-FORMATI = {"km": "#,##0.000", "mq": "#,##0", "int": "#,##0", "dec": "#,##0.00", "data": "dd/mm/yyyy", "ora": "hh:mm"}
+FORMATI = {"km": "#,##0.000", "mq": "#,##0", "int": "#,##0", "dec": "#,##0.00", "data": "dd/mm/yyyy", "ora": "hh:mm",
+           "ore": "[h]:mm"}
 NUMERICI = {"km", "mq", "int", "dec"}
-SOMMABILI = {"km", "mq", "int"}
+SOMMABILI = {"km", "mq", "int", "ore"}
 NON_SOMMARE = {"giorni_attivi", "n_operatori", "n_progetti"}  # conteggi distinti: la somma non ha senso
 
 
 def foglio(wb, titolo, colonne, righe, totali=True):
     """
-    colonne: lista di (chiave, etichetta, tipo) con tipo in testo|data|ora|km|mq|int|dec.
+    colonne: lista di (chiave, etichetta, tipo) con tipo in testo|data|ora|ore|km|mq|int|dec.
     Header fisso, filtri automatici, riga totali con SUBTOTALE (segue i filtri di Excel).
     """
     ws = wb.create_sheet(titolo[:31])
@@ -413,6 +423,8 @@ def foglio(wb, titolo, colonne, righe, totali=True):
                     pass
             elif t == "ora" and isinstance(v, str):
                 v = datetime.strptime(v, "%H:%M").time()
+            elif t == "ore" and v is not None:
+                v = v / 24  # in Excel le durate sono frazioni di giorno
             riga.append(v)
         ws.append(riga)
     n = len(righe)
@@ -455,7 +467,7 @@ C_LY = ("layer", "Layer", "testo")
 C_MET = [("km_netti", "Km netti", "km"), ("km_nuovi", "Km nuovi", "km"),
          ("create", "Create", "int"), ("modificate", "Modificate", "int"), ("cancellate", "Cancellate", "int")]
 C_GG = [("giorni_attivi", "Giorni attivi", "int"), ("km_al_giorno", "Km/giorno", "dec")]
-C_ORARI = [("inizio", "Inizio (1a foto)", "ora"), ("fine", "Fine (ultima foto)", "ora")]
+C_ORARI = [("inizio", "Inizio (1a foto)", "ora"), ("fine", "Fine (ultima foto)", "ora"), ("ore", "Ore lavoro", "ore")]
 C_FOTO = [("foto", "Foto", "int")]
 
 
@@ -472,7 +484,8 @@ def scrivi_excel(ris, dal, al, out):
     foglio(wb, "Progetto x layer", [C_PR, C_LY] + C_MET + C_FOTO,
            sorted(raggruppa(righe, ["progetto", "layer"]), key=lambda r: (r["progetto"], -r["km_netti"])))
     foglio(wb, "Dettaglio", [C_GIORNO, C_OP, C_PR, C_LY] + C_ORARI + C_MET + C_FOTO,
-           sorted(righe, key=lambda r: (r["giorno"], r["operatore"], r["progetto"], r["layer"])))
+           sorted((dict(r, ore=ore_lavoro(r)) for r in righe),
+                  key=lambda r: (r["giorno"], r["operatore"], r["progetto"], r["layer"])))
     foglio_info(wb, [
         ("Periodo", f"{dal:%d/%m/%Y} - {al:%d/%m/%Y} (giorno di sincronizzazione, ora italiana)"),
         ("Generato il", f"{adesso():%d/%m/%Y %H:%M}"),
@@ -480,6 +493,7 @@ def scrivi_excel(ris, dal, al, out):
         ("Km nuovi", "solo linee create nel periodo (lordo)"),
         ("Inizio / Fine", "orario della prima e dell'ultima foto della giornata, letto dal nome del file "
                           "(orologio del dispositivo); foto, inizio e fine sono nel giorno di SCATTO"),
+        ("Ore lavoro", "Fine - Inizio: tempo tra la prima e l'ultima foto della giornata (pause comprese)"),
         ("Progetti", f"letti {ris['progetti']['letti']}, saltati {ris['progetti']['saltati']}, "
                      f"errori {ris['progetti']['errori']}"),
     ] + [("Avviso", a) for a in ris["avvisi"]])

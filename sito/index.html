@@ -292,6 +292,7 @@ da un giorno molto alto spesso vuol dire proprio questo. Gli orari sono in ora i
     <tr><td><b>Cancellate</b></td><td>Quanti elementi sono stati cancellati.</td></tr>
     <tr><td><b>Inizio</b></td><td>Orario della <b>prima foto</b> scattata nella giornata: indica quando è iniziata l'attività in campo. Solo nelle viste con una riga per giorno (Dettaglio e Per giorno).</td></tr>
     <tr><td><b>Fine</b></td><td>Orario dell'<b>ultima foto</b> scattata nella giornata. Passa il mouse sull'orario per vedere quanto tempo è passato tra la prima e l'ultima foto.</td></tr>
+    <tr><td><b>Ore lavoro</b></td><td>Orario lavorativo della giornata: <b>Fine − Inizio</b>, in ore e minuti (es. <code>8:30</code> = 8 ore e mezza). Nella riga blu del giorno e nel totale in fondo è la somma delle righe.</td></tr>
     <tr><td><b>Foto</b></td><td>Quante foto sono state scattate. Ogni foto conta una volta sola.</td></tr>
     <tr><td><b>Giorni attivi</b></td><td>In quanti giorni diversi c'è stata almeno una sincronizzazione.</td></tr>
     <tr><td><b>Km/giorno</b></td><td>Km netti ÷ giorni attivi: la resa media in un giorno di lavoro.</td></tr>
@@ -317,7 +318,9 @@ Per questo:</p>
     il giorno dello scatto compare con gli orari e km a zero, e i km compaiono il giorno della sincronizzazione.</li>
   <li>L'ora è quella dell'<b>orologio del tablet o del telefono</b>: se è sbagliato, lo sono anche gli orari.</li>
   <li>Le giornate senza foto hanno inizio e fine vuoti (<b>–</b>). Le foto il cui nome non contiene data e ora vengono segnalate negli avvisi in fondo alla pagina.</li>
-  <li>Il tempo tra prima e ultima foto non comprende eventuali spostamenti o lavoro fatto prima della prima foto o dopo l'ultima.</li>
+  <li>Le <b>Ore lavoro</b> sono il tempo tra prima e ultima foto: non comprendono spostamenti o lavoro fatto prima della prima foto o dopo l'ultima, e non tolgono le pause.</li>
+  <li>Nella vista <b>Dettaglio</b> c'è una riga per progetto: se un operatore lavora su due progetti nello stesso giorno ha due orari, che possono sovrapporsi.
+    Nella vista <b>Per giorno</b> inizio, fine e ore sono quelli di tutta la squadra (prima foto del primo operatore, ultima dell'ultimo).</li>
 </ul>
 <h4>I riquadri in alto</h4>
 <p>Riassumono <b>quello che vedi in tabella</b>, quindi cambiano con la vista e con i filtri. <b>Km medi operatore/giorno</b> = km netti ÷ giornate-operatore,
@@ -418,7 +421,8 @@ il secondo inverte. La freccia blu indica la colonna usata.</p>
 const $ = id => document.getElementById(id);
 const GG = ["dom","lun","mar","mer","gio","ven","sab"];
 const nf = (d) => new Intl.NumberFormat("it-IT", {minimumFractionDigits:d, maximumFractionDigits:d});
-const F = {km: nf(2), dec: nf(2), int: nf(0)};
+const F = {km: nf(2), dec: nf(2), int: nf(0),
+  ore: {format: v => { const m = Math.round(v * 60); return `${Math.floor(m / 60)}:${String(m % 60).padStart(2, "0")}`; }}};
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const dIt = iso => { const [y,m,d] = iso.split("-"); return `${d}/${m}/${y}`; };
 const dObj = iso => { const [y,m,d] = iso.split("-").map(Number); return new Date(y, m-1, d); };
@@ -433,6 +437,7 @@ const COL = {
   giorno:       {l:"Giorno",        t:"data",  d:"Giorno in cui il lavoro è stato <b>sincronizzato</b> su QFieldCloud (ora italiana). Non è per forza il giorno in cui è stato disegnato. Solo per Inizio, Fine e Foto conta il giorno in cui la foto è stata <b>scattata</b>."},
   inizio:       {l:"Inizio",        t:"ora",   d:"Orario della <b>prima foto</b> scattata nella giornata, letto dal nome del file (orologio del tablet/telefono). Vuoto se quel giorno non ci sono foto."},
   fine:         {l:"Fine",          t:"ora",   d:"Orario dell'<b>ultima foto</b> scattata nella giornata, letto dal nome del file (orologio del tablet/telefono)."},
+  ore:          {l:"Ore lavoro",    t:"ore",   d:"Orario lavorativo: tempo tra la prima e l'ultima foto della giornata (Fine − Inizio), in ore e minuti. Nella riga blu del giorno e nel totale è la <b>somma</b> delle righe."},
   foto:         {l:"Foto",          t:"int",   d:"Foto scattate, contate nel giorno di scatto. Una foto conta una volta sola anche se l'elemento viene modificato più volte."},
   operatore:    {l:"Operatore",     t:"testo", d:"Utente QFieldCloud che ha sincronizzato le modifiche."},
   progetto:     {l:"Progetto",      t:"testo", d:"Progetto QFieldCloud in cui sono state fatte le modifiche."},
@@ -460,8 +465,8 @@ const VISTE = {
   layer:     {l:"Per layer",     key:["progetto","layer"], extra:["foto","n_operatori"], sort:[["progetto",1],["km_netti",-1]],
               d:"Una riga per progetto + layer: su quali strati si lavora."},
 };
-// inizio/fine hanno senso solo nelle viste con una riga per giorno
-const colonne = v => [...VISTE[v].key, ...(VISTE[v].key.includes("giorno") ? ["inizio","fine"] : []), ...MET, ...VISTE[v].extra];
+// inizio/fine/ore hanno senso solo nelle viste con una riga per giorno
+const colonne = v => [...VISTE[v].key, ...(VISTE[v].key.includes("giorno") ? ["inizio","fine","ore"] : []), ...MET, ...VISTE[v].extra];
 const isNum = k => !["testo","data","ora"].includes(COL[k].t);
 const aDestra = k => isNum(k) || COL[k].t === "ora";
 // la riga contiene lavoro sincronizzato (non solo foto scattate quel giorno e sincronizzate dopo)
@@ -552,6 +557,7 @@ function aggrega(R, vista) {
   for (const a of acc.values()) {
     a.giorni_attivi = a._g.size; a.n_operatori = a._o.size; a.n_progetti = a._p.size;
     a.km_al_giorno = a.giorni_attivi ? a.km_netti / a.giorni_attivi : 0;
+    a.ore = a.inizio ? (minuti(a.fine) - minuti(a.inizio)) / 60 : null;  // null = nessuna foto
   }
   return [...acc.values()];
 }
@@ -559,7 +565,7 @@ function filtraColonne(rows, cols) {
   const fv = ui.filtri[ui.vista] || {};
   const att = cols.filter(k => fv[k]);
   if (!att.length) return rows;
-  return rows.filter(r => att.every(k => isNum(k) ? matchNum(r[k], fv[k]) : COL[k].t === "ora" ? matchOra(r[k], fv[k]) : matchTesto(testoCella(k, r[k]), fv[k])));
+  return rows.filter(r => att.every(k => isNum(k) ? r[k] != null && matchNum(r[k], fv[k]) : COL[k].t === "ora" ? matchOra(r[k], fv[k]) : matchTesto(testoCella(k, r[k]), fv[k])));
 }
 const ordAttivo = () => ui.sort[ui.vista] && ui.sort[ui.vista].length ? ui.sort[ui.vista] : VISTE[ui.vista].sort;
 function ordina(rows) {
@@ -567,7 +573,9 @@ function ordina(rows) {
   return rows.sort((x, y) => {
     for (const [k, dir] of s) {
       const a = x[k], b = y[k];
-      if (COL[k].t === "ora" && !a !== !b) return a ? -1 : 1;  // senza orario sempre in fondo
+      const va = a == null || a === "", vb = b == null || b === "";  // senza orario sempre in fondo
+      if (va !== vb) return va ? 1 : -1;
+      if (va) continue;
       const c = typeof a === "number" ? a - b : String(a).localeCompare(String(b), "it", {numeric:true, sensitivity:"base"});
       if (c) return c * dir;
     }
@@ -586,6 +594,7 @@ function fmt(k, v) {
   const t = COL[k].t;
   if (t === "data") return dLab(v);
   if (t === "ora") return v || "–";
+  if (v == null) return "–";
   if (t === "testo") return esc(v);
   return F[t].format(v);
 }
@@ -597,7 +606,7 @@ function renderHead() {
     return `<th data-k="${k}" class="${aDestra(k) ? "num" : ""}" aria-sort="${dir > 0 ? "ascending" : dir < 0 ? "descending" : "none"}">${aDestra(k) ? ar + COL[k].l : COL[k].l + " " + ar}</th>`;
   }).join("");
   const f = COLS.map(k => {
-    const ph = isNum(k) ? "es. >0" : COL[k].t === "data" ? "es. 12/10, lun" : COL[k].t === "ora" ? "es. <8:00" : "filtra…";
+    const ph = COL[k].t === "ore" ? "es. >8" : isNum(k) ? "es. >0" : COL[k].t === "data" ? "es. 12/10, lun" : COL[k].t === "ora" ? "es. <8:00" : "filtra…";
     return `<th><input data-f="${k}" class="${fv[k] ? "on" : ""}" value="${esc(fv[k]||"")}" placeholder="${ph}" aria-label="Filtro ${COL[k].l}" ${aDestra(k) ? 'style="text-align:right"' : ""}></th>`;
   }).join("");
   $("th").innerHTML = `<tr class="h">${h}</tr><tr class="f">${f}</tr>`;
@@ -609,7 +618,7 @@ function cella(r, k, i, maxKm, nascondiGiorno) {
   if (aDestra(k)) cls += " num";
   if (typeof v === "number" && v < -0.0005) cls += " neg";
   if (typeof v === "number" && Math.abs(v) < 0.0005 && k !== "km_netti") cls += " dim";
-  if (t === "ora" && !v) cls += " dim";
+  if ((t === "ora" && !v) || v == null) cls += " dim";
   if (nascondiGiorno && k === "giorno") cls += " gday";
   let html = fmt(k, v);
   if (COL[k].bar) html = `<span class="kb"><i style="width:${(Math.max(0, v) / maxKm * 100).toFixed(1)}%"></i></span>${html}`;
@@ -621,9 +630,10 @@ function renderBody() {
   // totali per giorno (su tutte le righe visibili, non solo le prime LIMITE)
   GRUPPI = {};
   if (grp) for (const r of VISIBILI) {
-    const g = GRUPPI[r.giorno] ||= {n:0, o:new Set(), p:new Set(), foto:0, inizio:"", fine:"", ...Object.fromEntries(MET.map(m => [m, 0]))};
+    const g = GRUPPI[r.giorno] ||= {n:0, o:new Set(), p:new Set(), foto:0, inizio:"", fine:"", ore:null, ...Object.fromEntries(MET.map(m => [m, 0]))};
     g.n++; g.o.add(r.operatore); g.p.add(r.progetto); MET.forEach(m => g[m] += r[m]);
     g.foto += r.foto; g.inizio = minOra(g.inizio, r.inizio); g.fine = maxOra(g.fine, r.fine);
+    if (r.ore != null) g.ore = (g.ore || 0) + r.ore;
   }
   let out = "", ultimo = null;
   R.forEach((r, i) => {
@@ -646,6 +656,7 @@ function renderBody() {
   MET.forEach(m => TOT[m] = VISIBILI.reduce((s, r) => s + r[m], 0));
   TOT.foto = VISIBILI.reduce((s, r) => s + r.foto, 0);
   TOT.inizio = VISIBILI.reduce((s, r) => minOra(s, r.inizio), ""); TOT.fine = VISIBILI.reduce((s, r) => maxOra(s, r.fine), "");
+  TOT.ore = VISIBILI.some(r => r.ore != null) ? VISIBILI.reduce((s, r) => s + (r.ore || 0), 0) : null;
   TOT.giorni_attivi = TOT._g.size; TOT.km_al_giorno = TOT._g.size ? TOT.km_netti / TOT._g.size : 0;
   TOT.n_operatori = TOT._o.size; TOT.n_progetti = TOT._p.size;
   const nk = VISTE[ui.vista].key.length;
@@ -735,6 +746,7 @@ const H = {
   data: "Scrivi parte della data o del giorno: <code>12/10</code> (un giorno), <code>/10/</code> (tutto ottobre), <code>sab</code> (tutti i sabati).",
   num: "<code>&gt;5</code> maggiore di 5 · <code>&lt;0</code> negativi · <code>2..10</code> tra 2 e 10 · <code>0</code> uguale a zero · <code>!=0</code> diverso da zero. Decimali con la virgola.",
   ora: "<code>&lt;8</code> prima delle 8 · <code>&gt;=17:30</code> dalle 17:30 in poi · <code>7..9</code> tra le 7 e le 9. Ore e minuti con i due punti.",
+  ore: "<code>&gt;8</code> più di 8 ore · <code>&lt;4</code> meno di 4 ore · <code>6..8</code> tra 6 e 8 ore · <code>7,5</code> = 7 ore e 30 minuti.",
 };
 function tipOrari(r, tot) {
   if (!r.inizio) return `<div class="big">Nessuna foto</div>Nessuna foto con orario in questa riga: inizio e fine non sono disponibili.`;
@@ -763,6 +775,11 @@ function tipValore(k, r, tot) {
     case "giorno":    return `<div class="big">${dLungo(v)}</div>Giorno di sincronizzazione (ora italiana); per inizio, fine e foto è il giorno di scatto.` +
                              (r._src && !r._src.some(sincr) ? `<div class="hint">Solo foto: scattate questo giorno ma sincronizzate in un giorno successivo, dove trovi km ed elementi.</div>` : "");
     case "inizio": case "fine": return tipOrari(r, tot);
+    case "ore":
+      if (v == null) return `<div class="big">Nessuna foto</div>Senza foto con orario non si può calcolare l'orario lavorativo.`;
+      if (tot) return `<div class="big">${fmt(k, v)} ore</div>Somma delle ore lavoro delle righe.<div class="hint">Se un operatore lavora su più progetti nello stesso giorno, gli orari dei progetti possono sovrapporsi.</div>`;
+      return `<div class="big">${fmt(k, v)} ore</div>Dalle ${r.inizio} (prima foto) alle ${r.fine} (ultima foto) · ${plur(r.foto, "foto", "foto")}.` +
+        `<div class="hint">Non comprende il tempo prima della prima foto e dopo l'ultima, né le pause.</div>`;
     case "foto":      return `<div class="big">${plur(v, "foto", "foto")}</div>Foto scattate ${ogg}, contate nel giorno di scatto.`;
     case "operatore": return `<div class="big">${esc(v)}</div>Utente QFieldCloud.` + (r._p ? `<br>Progetti: ${elenco(r._p)}` : "") +
                              (r._g && ui.vista !== "dettaglio" ? `<br>Giorni attivi: ${r._g.size}` : "");
@@ -787,7 +804,7 @@ function tipPer(el) {
   if (el.matches("tr.h th[data-k]")) { const k = el.dataset.k;
     return `<div class="big">${COL[k].l}</div>${COL[k].d}<div class="hint">Clic per ordinare · di nuovo per invertire</div>`; }
   if (el.matches("tr.f input[data-f]")) { const k = el.dataset.f;
-    return `<b>Filtra ${COL[k].l}</b><br>${isNum(k) ? H.num : H[COL[k].t]}`; }
+    return `<b>Filtra ${COL[k].l}</b><br>${H[COL[k].t] || H.num}`; }
   if (el.matches("#tabs button")) return `<b>${VISTE[el.dataset.v].l}</b><br>${VISTE[el.dataset.v].d}`;
   // barre grafico
   if (el.matches(".bars .b")) { const b = BARRE[Number(el.dataset.i)];
@@ -896,14 +913,14 @@ async function caricaDati(manuale) {
 }
 
 /* ---------- export Excel (nel browser, con SheetJS) ---------- */
-const XFMT = {km: "#,##0.000", mq: "#,##0", int: "#,##0", dec: "#,##0.00", data: "dd/mm/yyyy", ora: "hh:mm"};
+const XFMT = {km: "#,##0.000", mq: "#,##0", int: "#,##0", dec: "#,##0.00", data: "dd/mm/yyyy", ora: "hh:mm", ore: "[h]:mm"};
 const NON_SOMMARE = ["giorni_attivi", "n_operatori", "n_progetti", "km_al_giorno"];
 function foglioXlsx(colonne, righe) {
   const aoa = [colonne.map(k => COL[k].l)];
   // date come numero seriale Excel: evita sfasamenti di fuso orario
   const seriale = iso => { const [y, m, d] = iso.split("-").map(Number); return (Date.UTC(y, m - 1, d) - Date.UTC(1899, 11, 30)) / 86400000; };
   // orari come frazione di giorno: in Excel si possono sottrarre per avere la durata
-  righe.forEach(r => aoa.push(colonne.map(k => COL[k].t === "data" ? seriale(r[k]) : COL[k].t === "ora" ? (r[k] ? minuti(r[k]) / 1440 : null) : typeof r[k] === "number" ? Math.round(r[k] * 10000) / 10000 : r[k])));
+  righe.forEach(r => aoa.push(colonne.map(k => COL[k].t === "data" ? seriale(r[k]) : COL[k].t === "ora" ? (r[k] ? minuti(r[k]) / 1440 : null) : COL[k].t === "ore" ? (r[k] == null ? null : r[k] / 24) : typeof r[k] === "number" ? Math.round(r[k] * 10000) / 10000 : r[k])));
   const ws = XLSX.utils.aoa_to_sheet(aoa);
   const n = righe.length;
   colonne.forEach((k, j) => {
