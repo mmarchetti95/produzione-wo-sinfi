@@ -46,6 +46,25 @@ code{font-family:Consolas,"Cascadia Mono",monospace;font-size:.92em;background:v
 .alert-err{background:rgba(248,81,73,.1);border:1px solid rgba(248,81,73,.25);color:var(--red)}
 .alert-warn{background:rgba(210,153,34,.1);border:1px solid rgba(210,153,34,.25);color:var(--orange)}
 
+/* BARRA PERIODO (in evidenza in alto) */
+.period-bar{background:linear-gradient(135deg,rgba(88,166,255,.12),rgba(46,160,67,.06));border:1px solid rgba(88,166,255,.4);border-radius:var(--radius);padding:16px 18px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.pb-label{font-size:11px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:.07em}
+.pb-range{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-top:2px;font-size:28px;font-weight:800;letter-spacing:-.02em;line-height:1.2;font-variant-numeric:tabular-nums}
+.pb-arrow{color:var(--muted);font-weight:400;font-size:22px}
+.pb-days{font-size:12px;font-weight:600;color:var(--accent-h);background:rgba(46,160,67,.12);border:1px solid rgba(46,160,67,.25);border-radius:20px;padding:2px 10px;letter-spacing:0;align-self:center;white-space:nowrap}
+.pb-sub{font-size:12px;color:var(--muted);margin-top:5px}
+.pb-sub b{color:var(--text)}
+.pb-controls{display:flex;flex-direction:column;gap:8px;align-items:flex-end}
+.pb-quick{display:flex;background:var(--surface2);border:1px solid var(--border);border-radius:8px;overflow:hidden;flex-wrap:wrap}
+.pb-quick button{border:none;background:transparent;color:var(--muted);padding:6px 11px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;transition:background .15s,color .15s}
+.pb-quick button[aria-pressed=true]{background:var(--blue);color:#0d1117}
+.pb-quick button:hover:not([aria-pressed=true]){color:var(--text)}
+.pb-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end;color:var(--muted)}
+.pb-row .fi{width:auto;min-height:34px;padding:6px 8px;font-size:12px}
+.btn.blue{background:var(--blue);border-color:var(--blue);color:#0d1117}
+.btn.blue:hover{opacity:.85;color:#0d1117}
+@media(max-width:720px){.pb-controls{align-items:stretch}.pb-row{justify-content:flex-start}.pb-range{font-size:21px}}
+
 /* PILLS */
 #layer-pills{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
 .layer-pill{display:flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:5px 12px;font-size:12px;font-weight:600;cursor:pointer;transition:border-color .15s,background .15s;user-select:none;color:var(--text)}
@@ -274,6 +293,21 @@ dialog.guida::backdrop{background:rgba(1,4,9,.7)}
   <div class="alert alert-err" id="banner" hidden></div>
 
   <div id="report">
+    <section class="period-bar" aria-label="Periodo dei dati">
+      <div>
+        <div class="pb-label">Periodo dei dati · tabella, grafici ed export Excel</div>
+        <div class="pb-range"><span id="pbDa">–</span><span class="pb-arrow">→</span><span id="pbA">–</span><span class="pb-days" id="pbGiorni"></span></div>
+        <div class="pb-sub" id="pbSub"></div>
+      </div>
+      <div class="pb-controls">
+        <div class="pb-quick" id="pbQuick" role="group" aria-label="Periodo rapido"></div>
+        <div class="pb-row">
+          <input class="fi" type="date" id="fDa" aria-label="Dal" data-tip="Mostra i dati <b>dal</b> giorno indicato (giorno di sincronizzazione)"> –
+          <input class="fi" type="date" id="fA" aria-label="Al" data-tip="Mostra i dati <b>fino al</b> giorno indicato (compreso)">
+          <button class="btn blue" id="bXls" data-tip="Scarica in Excel <b>esattamente</b> la tabella a schermo, per il periodo indicato qui accanto: stessa vista, stessi filtri, stesso ordinamento. Nel foglio <i>Info</i> trovi periodo e filtri applicati."><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg> Esporta Excel</button>
+        </div>
+      </div>
+    </section>
     <div id="layer-pills"></div>
     <section class="kpis" id="kpis"></section>
 
@@ -284,17 +318,6 @@ dialog.guida::backdrop{background:rgba(1,4,9,.7)}
           <label class="fl" for="q">Ricerca globale</label>
           <input class="fi" type="search" id="q" placeholder="Cerca…" autocomplete="off"
             data-tip="Cerca in operatore, progetto e layer insieme. Più parole separate da virgola = una qualsiasi (es. <code>rperri, FGN</code>). Con <code>!</code> escludi (es. <code>!test</code>).">
-        </div>
-        <div class="filter-group">
-          <label class="fl" for="fPer">Periodo</label>
-          <select class="fi" id="fPer" data-tip="Scegli il periodo da analizzare: tabella, riquadri, grafici ed export Excel si aggiornano subito.<div class='hint'>Sono disponibili gli ultimi 12 mesi. Per un periodo preciso usa le due date qui sotto.</div>"></select>
-        </div>
-        <div class="filter-group">
-          <label class="fl">Intervallo date</label>
-          <div class="date-row">
-            <input class="fi" type="date" id="fDa" aria-label="Dal" data-tip="Mostra i dati <b>dal</b> giorno indicato (giorno di sincronizzazione)">
-            <input class="fi" type="date" id="fA" aria-label="Al" data-tip="Mostra i dati <b>fino al</b> giorno indicato (compreso)">
-          </div>
         </div>
         <hr class="filter-divider">
         <div class="filter-group">
@@ -351,7 +374,7 @@ dialog.guida::backdrop{background:rgba(1,4,9,.7)}
       </div>
       <div class="footer-bar">
         <span id="footer-count"></span>
-        <button class="export-btn" id="bXls" data-tip="Scarica in Excel <b>esattamente</b> la tabella a schermo: stessa vista, stessi filtri, stesso ordinamento. Nel foglio <i>Info</i> trovi i filtri applicati."><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg> Esporta Excel</button>
+        <button class="export-btn" id="bXls2" data-tip="Scarica in Excel <b>esattamente</b> la tabella a schermo: stessa vista, stessi filtri, stesso ordinamento. Nel foglio <i>Info</i> trovi i filtri applicati."><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg> Esporta Excel</button>
       </div>
     </div>
 
@@ -476,11 +499,15 @@ la ricerca e i filtri su operatore, progetto e layer.</p>
 <p>L'ultima vista scelta e il suo ordinamento vengono ricordati alla prossima apertura.</p>
 
 <h3 id="g-filtri">6. Filtrare e ordinare</h3>
-<h4>Filtri generali (pannello a sinistra)</h4>
+<h4>Periodo (barra blu in alto)</h4>
 <ul>
-  <li><b>Periodo</b>: scegli un periodo rapido (ultimi 7, 30 o 60 giorni, mese corrente, mese scorso, anno corrente, tutto lo storico). Alla prossima apertura la board
+  <li>La barra in alto mostra in grande <b>da che giorno a che giorno</b> stai guardando i dati: è lo stesso periodo di tabella, riquadri, grafici ed <b>export Excel</b>.</li>
+  <li><b>Periodo rapido</b>: scegli un periodo rapido (ultimi 7, 30 o 60 giorni, mese corrente, mese scorso, anno corrente, tutto lo storico). Alla prossima apertura la board
     riparte dallo stesso periodo, aggiornato al giorno corrente. All'apertura sono mostrati gli ultimi 60 giorni.</li>
   <li><b>Date dal / al</b>: per un periodo preciso, dentro gli ultimi 12 mesi. Il periodo diventa <i>Personalizzato</i>.</li>
+</ul>
+<h4>Filtri (pannello a sinistra)</h4>
+<ul>
   <li><b>Ricerca globale</b>: cerca contemporaneamente in operatore, progetto e layer.</li>
   <li><b>Operatore, Progetto, Layer, Tipo elemento</b>: mostrano solo quel valore in tutta la board (riquadri, grafici, tabella, Excel). Il filtro attivo ha il bordo blu.</li>
   <li>Le <b>pillole dei layer</b> in alto e le voci dei <b>grafici a barre</b> sono cliccabili: un clic imposta il filtro corrispondente, un secondo clic lo toglie.</li>
@@ -515,11 +542,11 @@ il secondo inverte. La freccia blu indica la colonna usata.</p>
 
 <h3 id="g-excel">7. Esportare in Excel</h3>
 <ul>
-  <li><b>Esporta Excel</b> scarica esattamente la tabella a schermo: stessa vista, stessi filtri, stesso ordinamento.</li>
+  <li><b>Esporta Excel</b> (nella barra del periodo in alto, o in fondo alla tabella) scarica esattamente la tabella a schermo: stesso periodo, stessa vista, stessi filtri, stesso ordinamento.</li>
   <li>Dalla vista <b>Dettaglio</b> il file contiene anche il foglio <b>Dettaglio per layer</b>, con le stesse righe divise per layer (aperte o chiuse che siano a schermo).</li>
   <li>Il file ha i filtri di Excel già attivi e una riga <b>Totale</b> che si ricalcola se filtri anche dentro Excel.</li>
-  <li>Il foglio <b>Info</b> riporta vista, data di esportazione, data di aggiornamento dei dati e filtri applicati.</li>
-  <li>Il file finisce nella cartella <i>Download</i> del browser con un nome del tipo <code>produzione_operatore_2026-10-13.xlsx</code>.</li>
+  <li>Il foglio <b>Info</b> riporta periodo, vista, data di esportazione, data di aggiornamento dei dati e filtri applicati.</li>
+  <li>Il file finisce nella cartella <i>Download</i> del browser con il periodo nel nome, ad esempio <code>produzione_operatore_2026-08-18_2026-10-16.xlsx</code>.</li>
 </ul>
 
 <h3 id="g-limiti">8. Avvisi e limiti da conoscere</h3>
@@ -657,7 +684,13 @@ function applicaPeriodo(k) {
     ui.da = da && da > DATI.dal ? da : ""; ui.a = a && a < DATI.al ? a : "";
   }
 }
-function syncPeriodoUi() { $("fPer").value = ui.periodo; $("fDa").value = ui.da; $("fA").value = ui.a; }
+function syncPeriodoUi() {
+  $("pbQuick").querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", b.dataset.p === ui.periodo));
+  const [da, a] = periodoEff(); $("fDa").value = da; $("fA").value = a;  // sempre le date effettive, anche a fine storico
+}
+// periodo effettivo (date vuote = inizio/fine dei dati disponibili)
+const periodoEff = () => [ui.da || (DATI ? DATI.dal : ""), ui.a || (DATI ? DATI.al : "")];
+const giorniTra = (da, a) => Math.round((dObj(a) - dObj(da)) / 86400000) + 1;
 
 /* ---------- filtri ---------- */
 function matchTesto(val, f) {
@@ -965,11 +998,18 @@ function renderChart(src) {
 }
 function renderInfo() {
   const chips = [];
-  if (ui.da || ui.a) chips.push(["date", `Periodo: ${ui.periodo !== "custom" ? PERIODI[ui.periodo].l + " · " : ""}${dIt(ui.da || DATI.dal)} – ${dIt(ui.a || DATI.al)}`]);
   if (ui.q) chips.push(["q", `Cerca: ${ui.q}`]);
   Object.entries(ui.f).forEach(([k, v]) => v && chips.push(["g:" + k, `${GLAB[k]}: ${k === "geom" ? $("fGeom").selectedOptions[0].text : v}`]));
   Object.entries(ui.filtri[ui.vista] || {}).forEach(([k, v]) => v && COLS.includes(k) && chips.push(["f:" + k, `${COL[k].l}: ${v}`]));
   $("infoRow").hidden = !chips.length;
+  if (DATI) {
+    const [da, a] = periodoEff(), n = giorniTra(da, a), altri = descrizioneFiltri().filter(f => !f.startsWith("Periodo"));
+    $("pbDa").textContent = dIt(da); $("pbA").textContent = dIt(a);
+    $("pbGiorni").textContent = `${PERIODI[ui.periodo].l}${ui.periodo === "custom" || ui.periodo === "tutto" ? ` · ${plur(n, "giorno", "giorni")}` : ""}`;
+    $("pbSub").innerHTML = `<b>${plur(VISIBILI.length, "riga", "righe")}</b> nella vista <b>${VISTE[ui.vista].l}</b> · ` +
+      (altri.length ? `filtri: <b>${esc(altri.join(" · "))}</b>` : "nessun altro filtro") +
+      ` · storico disponibile dal ${dIt(DATI.dal)} al ${dIt(DATI.al)}`;
+  }
   $("info").innerHTML = chips.map(([id, t]) => `<span class="chip">${esc(t)}<button data-chip="${esc(id)}" aria-label="Rimuovi filtro" data-tip="Togli questo filtro">×</button></span>`).join("");
   $("footer-count").textContent = `${plur(VISIBILI.length, "riga", "righe")} · vista ${VISTE[ui.vista].l}`;
   const n = righeBase().length, tot = DATI ? DATI.righe.length : 0;
@@ -986,7 +1026,8 @@ function render(soloCorpo) {
 }
 function descrizioneFiltri() {
   const f = [];
-  if (ui.da || ui.a) f.push(`Periodo ${dIt(ui.da || DATI.dal)} - ${dIt(ui.a || DATI.al)}`);
+  const [pda, pa] = periodoEff();
+  f.push(`Periodo ${dIt(pda)} - ${dIt(pa)}`);
   if (ui.q) f.push(`Ricerca: ${ui.q}`);
   Object.entries(ui.f).forEach(([k, v]) => v && f.push(`${GLAB[k]}: ${k === "geom" ? $("fGeom").selectedOptions[0].text : v}`));
   Object.entries(ui.filtri[ui.vista] || {}).forEach(([k, v]) => v && COLS.includes(k) && f.push(`${COL[k].l}: ${v}`));
@@ -1184,7 +1225,7 @@ async function caricaDati(manuale) {
     primoCaricamento = false;
   } catch (e) {
     renderBanner(e.message);
-    if (!DATI) { renderSub(); $("bXls").disabled = true; }
+    if (!DATI) { renderSub(); $("bXls").disabled = $("bXls2").disabled = true; }
   }
 }
 
@@ -1220,21 +1261,21 @@ function esporta() {
   calcola();
   try {
     if (!window.XLSX) throw new Error("libreria Excel non caricata, controlla la connessione");
-    const titolo = VISTE[ui.vista].l, file = `produzione_${ui.vista}_${dIso(new Date())}`;
+    const titolo = VISTE[ui.vista].l, [pda, pa] = periodoEff(), file = `produzione_${ui.vista}_${pda}_${pa}`;
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, foglioXlsx(COLS, VISIBILI), titolo.slice(0, 31));
     if (ui.vista === "dettaglio") {
       const righeL = VISIBILI.flatMap(r => perLayer(r._src).map(s => ({...s, giorno:r.giorno, operatore:r.operatore, progetto:r.progetto})));
       XLSX.utils.book_append_sheet(wb, foglioXlsx(["giorno","operatore","progetto","layer","tipo",...MET,"foto"], righeL), "Dettaglio per layer");
     }
-    const info = [["Vista", titolo], ["Esportato il", new Date().toLocaleString("it-IT")],
+    const info = [["Periodo", `dal ${dIt(pda)} al ${dIt(pa)} (${plur(giorniTra(pda, pa), "giorno", "giorni")})`], ["Vista", titolo], ["Esportato il", new Date().toLocaleString("it-IT")],
       ["Dati aggiornati al", DATI ? new Date(DATI.aggiornato).toLocaleString("it-IT") : ""], ["Righe", VISIBILI.length],
-      ...descrizioneFiltri().map(f => ["Filtro", f])];
+      ...descrizioneFiltri().filter(f => !f.startsWith("Periodo")).map(f => ["Filtro", f])];
     const wsInfo = XLSX.utils.aoa_to_sheet(info);
     wsInfo["!cols"] = [{wch: 24}, {wch: 90}];
     XLSX.utils.book_append_sheet(wb, wsInfo, "Info");
     XLSX.writeFile(wb, `${file}.xlsx`);
-    toast(`Excel esportato · ${plur(VISIBILI.length, "riga", "righe")}`);
+    toast(`Excel esportato · ${plur(VISIBILI.length, "riga", "righe")} dal ${dIt(pda)} al ${dIt(pa)}`);
   } catch (e) { toast("Export non riuscito: " + e.message); }
 }
 let tt;
@@ -1290,11 +1331,11 @@ $("th").addEventListener("input", e => {
   clearTimeout(deb); deb = setTimeout(() => render(true), 150);
 });
 $("q").addEventListener("input", e => { ui.q = e.target.value; clearTimeout(deb); deb = setTimeout(() => render(true), 150); });
-$("fPer").innerHTML = Object.entries(PERIODI).map(([k, p]) => `<option value="${k}">${p.l}</option>`).join("");
-$("fPer").value = ui.periodo;
-$("fPer").addEventListener("change", e => {
-  if (e.target.value !== "custom") applicaPeriodo(e.target.value); else ui.periodo = "custom";
-  syncPeriodoUi(); salvaUi(); render(true);
+const PER_BREVE = {"7":"7 gg", "30":"30 gg", "60":"60 gg", "90":"3 mesi", mese:"Mese", mesep:"Mese scorso", anno:"Anno", tutto:"Tutto"};
+$("pbQuick").innerHTML = Object.entries(PER_BREVE).map(([k, l]) => `<button type="button" data-p="${k}" aria-pressed="${k === ui.periodo}" data-tip="${PERIODI[k].l}">${l}</button>`).join("");
+$("pbQuick").addEventListener("click", e => {
+  const b = e.target.closest("button[data-p]"); if (!b) return;
+  applicaPeriodo(b.dataset.p); syncPeriodoUi(); salvaUi(); nascondiTip(); render(true);
 });
 const dataManuale = (campo, v) => { ui[campo] = v; ui.periodo = "custom"; ui.prima = null; syncPeriodoUi(); render(true); };
 $("fDa").addEventListener("change", e => dataManuale("da", e.target.value));
@@ -1395,6 +1436,7 @@ if (TOKEN) {
 } else $("bSync").href = `https://github.com/${REPO}/actions/workflows/aggiorna.yml`;
 $("bRicarica").addEventListener("click", () => caricaDati(true));
 $("bXls").addEventListener("click", esporta);
+$("bXls2").addEventListener("click", esporta);
 setInterval(() => { if (DATI) { renderSub(); renderBanner(); } }, 30000);
 setInterval(() => { if (!document.hidden) caricaDati(); }, 5 * 60000);
 document.addEventListener("visibilitychange", () => { if (!document.hidden) caricaDati(); });
