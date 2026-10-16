@@ -6,207 +6,259 @@
 <title>Produzione WO SINFI</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-:root {
-  color-scheme: light;
-  --bg:#f3f4f6; --card:#ffffff; --border:#e2e4e8; --line:#eef0f3;
-  --ink:#111827; --ink2:#4b5563; --muted:#6b7280;
-  --accent:#1f6feb; --accent-ink:#ffffff; --accent-soft:#e8f0fe;
-  --bar:#cfe0fb; --neg:#c0262d; --warn-bg:#fff4e0; --warn:#9a5b00;
-  --head:#f8f9fb; --zebra:#fafbfc; --hover:#f1f6ff; --grp:#eaf1fd;
-  --tip-bg:#1f2937; --tip-ink:#f9fafb;
-  --g-punto:#d9480f; --g-linea:#1f6feb; --g-poli:#2b8a3e;
-  --shadow: 0 1px 2px rgba(16,24,40,.06), 0 1px 3px rgba(16,24,40,.08);
+:root{
+  color-scheme:dark;
+  --bg:#0d1117;--surface:#161b22;--surface2:#1c2128;--surface3:#21262d;
+  --border:#30363d;--border2:#484f58;--text:#e6edf3;--muted:#7d8590;
+  --accent:#2ea043;--accent-h:#3fb950;--blue:#58a6ff;--purple:#a371f7;
+  --orange:#d29922;--red:#f85149;--teal:#39d353;--radius:10px;
+  --g-punto:#f0883e;--g-linea:#58a6ff;--g-poli:#3fb950;
+  --font:'Inter',system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
 }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
-  color-scheme: dark;
-  --bg:#0f1115; --card:#171a20; --border:#2a2f38; --line:#222730;
-  --ink:#eef0f3; --ink2:#b7bdc8; --muted:#8a919e;
-  --accent:#4a8cf7; --accent-ink:#ffffff; --accent-soft:#1b2a44;
-  --bar:#24426e; --neg:#ff7b7b; --warn-bg:#3a2a10; --warn:#f3c26b;
-  --head:#1c2027; --zebra:#191c22; --hover:#1d2533; --grp:#1a2538;
-  --tip-bg:#e5e7eb; --tip-ink:#111827;
-  --g-punto:#ff8a4c; --g-linea:#4a8cf7; --g-poli:#51cf66;
-  --shadow: none;
-} }
-* { box-sizing: border-box }
-[hidden] { display:none !important }
-body { margin:0; background:var(--bg); color:var(--ink);
-  font:14px/1.45 "Segoe UI", system-ui, -apple-system, Roboto, sans-serif }
-main { max-width:1280px; margin:0 auto; padding:20px 16px 48px }
-button, select, input { font:inherit; color:inherit }
-.num { text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap }
-code { font-family:Consolas, "Cascadia Mono", monospace; font-size:.92em; background:var(--line); padding:1px 5px; border-radius:4px }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;line-height:1.5;min-height:100vh}
+button,select,input{font:inherit;color:inherit}
+.app{max-width:1480px;margin:0 auto;padding:24px 20px 48px}
+.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+code{font-family:Consolas,"Cascadia Mono",monospace;font-size:.92em;background:var(--surface3);padding:1px 5px;border-radius:4px}
 
-/* header */
-header { display:flex; flex-wrap:wrap; gap:12px 20px; align-items:flex-end; justify-content:space-between; margin-bottom:16px }
-h1 { font-size:24px; margin:0; letter-spacing:-.01em }
-.sub { color:var(--ink2); margin-top:2px }
-.sub b { color:var(--ink); font-weight:600 }
-.sync { display:flex; flex-wrap:wrap; gap:8px; align-items:center }
-.btn { border:1px solid var(--border); background:var(--card); border-radius:8px; padding:7px 12px;
-  cursor:pointer; display:inline-flex; gap:6px; align-items:center; box-shadow:var(--shadow) }
-.btn:hover { border-color:var(--accent) }
-.btn:disabled { opacity:.6; cursor:default }
-.btn.primary { background:var(--accent); border-color:var(--accent); color:var(--accent-ink); font-weight:600 }
-.btn.primary:hover { filter:brightness(1.08) }
-a.btn { text-decoration:none; color:inherit }
-.btn svg { width:16px; height:16px; flex:none }
-.spin svg { animation: giro 1s linear infinite }
-@keyframes giro { to { transform: rotate(360deg) } }
-select, input[type=date], input[type=search] { border:1px solid var(--border); background:var(--card);
-  border-radius:8px; padding:6px 10px; min-height:34px }
-label.chk { display:inline-flex; gap:6px; align-items:center; color:var(--ink2); font-size:13px; cursor:pointer }
-.sep { width:1px; height:24px; background:var(--border); margin:0 2px }
-.progress { height:3px; background:var(--line); border-radius:3px; overflow:hidden; margin:-8px 0 14px; visibility:hidden }
-.progress.on { visibility:visible }
-.progress i { display:block; height:100%; width:0; background:var(--accent); transition:width .3s }
-.banner { border-radius:10px; padding:10px 14px; margin-bottom:14px; display:none }
-.banner.err { display:block; background:#fde8e8; color:#8a1c1c; border:1px solid #f5c2c2 }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .banner.err { background:#3b1717; color:#ffb4b4; border-color:#5c2626 } }
+/* HEADER */
+.header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;gap:16px;flex-wrap:wrap}
+.header-left h1{font-size:20px;font-weight:700;letter-spacing:-.3px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.header-left p{font-size:13px;color:var(--muted);margin-top:3px}
+.header-left p b{color:var(--text);font-weight:600}
+.version-badge{background:rgba(46,160,67,.12);color:var(--accent-h);border:1px solid rgba(46,160,67,.25);border-radius:20px;padding:3px 11px;font-size:12px;font-weight:600;white-space:nowrap;cursor:help}
+.version-badge.old{background:rgba(248,81,73,.1);color:var(--red);border-color:rgba(248,81,73,.25)}
+.header-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.btn{border:1px solid var(--border);background:var(--surface2);color:var(--text);border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;display:inline-flex;gap:6px;align-items:center;transition:border-color .15s,color .15s,opacity .15s;white-space:nowrap;text-decoration:none}
+.btn:hover{border-color:var(--blue);color:var(--blue)}
+.btn:disabled{opacity:.45;cursor:default;border-color:var(--border);color:var(--text)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary:hover{opacity:.85;color:#fff}
+.btn svg{width:15px;height:15px;flex:none}
+.btn[aria-busy=true]{cursor:progress}
+.spin svg{animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ALERT */
+.alert{border-radius:8px;padding:12px 14px;font-size:13px;margin-bottom:16px}
+.alert-err{background:rgba(248,81,73,.1);border:1px solid rgba(248,81,73,.25);color:var(--red)}
+.alert-warn{background:rgba(210,153,34,.1);border:1px solid rgba(210,153,34,.25);color:var(--orange)}
+
+/* PILLS */
+#layer-pills{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.layer-pill{display:flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:5px 12px;font-size:12px;font-weight:600;cursor:pointer;transition:border-color .15s,background .15s;user-select:none;color:var(--text)}
+.layer-pill:hover{border-color:var(--border2)}
+.layer-pill .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.layer-pill.active{border-color:var(--blue);background:rgba(88,166,255,.1);color:var(--blue)}
+.layer-pill .pill-count{background:rgba(255,255,255,.08);border-radius:10px;padding:1px 7px;font-size:11px;margin-left:2px;font-variant-numeric:tabular-nums}
 
 /* KPI */
-.kpis { display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:10px; margin-bottom:14px }
-.kpi { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:12px 14px; box-shadow:var(--shadow); cursor:help }
-.kpi .l { color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.04em; font-weight:600 }
-.kpi .v { font-size:24px; font-weight:700; margin-top:2px; font-variant-numeric:tabular-nums }
-.kpi .v small { font-size:13px; color:var(--muted); font-weight:500; margin-left:3px }
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;cursor:help;transition:border-color .15s}
+.kpi:hover{border-color:var(--border2)}
+.kpi-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.kpi-value{font-size:24px;font-weight:800;letter-spacing:-.02em;line-height:1;font-variant-numeric:tabular-nums}
+.kpi-value small{font-size:13px;font-weight:600;color:var(--muted);margin-left:3px;letter-spacing:0}
+.kpi-value.green{color:var(--accent-h)} .kpi-value.blue{color:var(--blue)} .kpi-value.purple{color:var(--purple)}
+.kpi-value.orange{color:var(--orange)} .kpi-value.teal{color:var(--teal)} .kpi-value.punto{color:var(--g-punto)}
 
-/* grafico */
-.card { background:var(--card); border:1px solid var(--border); border-radius:12px; box-shadow:var(--shadow) }
-.chart { padding:12px 14px 8px; margin-bottom:14px }
-.chart-h { display:flex; justify-content:space-between; gap:8px; color:var(--ink2); font-size:13px; margin-bottom:6px }
-.bars { display:flex; align-items:flex-end; gap:2px; height:110px; border-bottom:1px solid var(--border) }
-.bars .b { flex:1; min-width:0; position:relative; height:100%; display:flex; align-items:flex-end; cursor:pointer; border-radius:4px 4px 0 0 }
-.bars .b i { display:block; width:100%; background:var(--accent); border-radius:4px 4px 0 0; opacity:.85; min-height:1px }
-.bars .b.we i { opacity:.45 }
-.bars .b.out i { opacity:.18 }
-.bars .b.zero i { background:var(--border) }
-.bars .b.neg i { background:var(--neg) }
-.bars .b:hover i, .bars .b.sel i { opacity:1; outline:2px solid var(--accent); outline-offset:1px }
-.bars .b:hover { background:var(--hover) }
-.xlab { display:flex; gap:2px; font-size:11px; color:var(--muted); margin-top:4px }
-.xlab span { flex:1; min-width:0; text-align:center; white-space:nowrap; overflow:visible }
-.btn[aria-busy=true] { cursor:progress; border-color:var(--accent) }
+/* MAIN GRID */
+.main-grid{display:grid;grid-template-columns:280px minmax(0,1fr);gap:16px;align-items:start;margin-bottom:20px}
+@media(max-width:960px){.main-grid{grid-template-columns:1fr}}
 
-/* tooltip */
-.tip { position:fixed; pointer-events:none; background:var(--tip-bg); color:var(--tip-ink); padding:8px 11px;
-  border-radius:8px; font-size:12.5px; line-height:1.45; display:none; z-index:50; max-width:360px;
-  box-shadow:0 6px 20px rgba(0,0,0,.25) }
-.tip .ctx { opacity:.7; font-size:11.5px; margin-bottom:3px }
-.tip .big { font-size:14px; font-weight:700 }
-.tip .hint { opacity:.7; font-size:11.5px; margin-top:4px }
-.tip code { background:rgba(127,127,127,.25); color:inherit }
+/* FILTER PANEL */
+.filter-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;position:sticky;top:16px}
+@media(max-width:960px){.filter-panel{position:static}}
+.panel-title{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:14px}
+.filter-group{margin-bottom:14px}
+.fl{font-size:11px;color:var(--muted);display:block;margin-bottom:5px;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.fi{width:100%;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:8px 10px;font-size:13px;outline:none;transition:border .15s;font-family:var(--font);min-height:36px}
+.fi:focus{border-color:var(--blue)}
+.fi.on{border-color:var(--blue);background:rgba(88,166,255,.08)}
+.fi::placeholder{color:var(--muted)}
+.date-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.date-row .fi{padding:7px 6px;font-size:12px}
+.btn-row{display:flex;gap:8px;margin-top:4px;flex-wrap:wrap}
+.result-info{font-size:11px;color:var(--muted);margin-top:10px}
+.filter-divider{border:none;border-top:1px solid var(--border);margin:14px 0}
 
-/* toolbar */
-.toolbar { display:flex; flex-wrap:wrap; gap:8px; align-items:center; padding:10px 12px; border-bottom:1px solid var(--border) }
-.tabs { display:flex; gap:2px; background:var(--bg); border-radius:9px; padding:3px; flex-wrap:wrap }
-.tabs button { border:0; background:transparent; padding:5px 10px; border-radius:7px; cursor:pointer; color:var(--ink2) }
-.tabs button[aria-selected=true] { background:var(--card); color:var(--ink); font-weight:600; box-shadow:var(--shadow) }
-.spacer { flex:1 }
-.range { display:flex; gap:6px; align-items:center; color:var(--muted) }
-input[type=search] { min-width:150px; width:190px }
-.info { color:var(--muted); font-size:13px; padding:8px 12px; display:flex; flex-wrap:wrap; gap:8px; align-items:center; border-bottom:1px solid var(--border) }
-.chips { display:flex; flex-wrap:wrap; gap:8px; align-items:center }
-.info .btn { padding:5px 10px; font-size:13px }
-.chip { background:var(--accent-soft); color:var(--accent); border-radius:999px; padding:2px 8px 2px 10px; font-size:12px; display:inline-flex; gap:4px; align-items:center }
-.chip button { border:0; background:none; color:inherit; cursor:pointer; padding:0 2px; font-size:14px; line-height:1 }
-.linkbtn { border:0; background:none; color:var(--accent); cursor:pointer; padding:0; font:inherit; text-decoration:underline }
+/* RIGHT */
+.right-col{display:flex;flex-direction:column;gap:16px;min-width:0}
 
-/* tabella */
-.tw { overflow:auto; max-height:calc(100vh - 220px); min-height:240px }
-table { border-collapse:separate; border-spacing:0; width:100%; min-width:720px }
-th, td { padding:7px 12px; border-bottom:1px solid var(--line); text-align:left }
-thead th { position:sticky; z-index:2; background:var(--head) }
-thead tr.h th { top:0; font-size:12px; color:var(--ink2); font-weight:600; cursor:pointer; user-select:none; white-space:nowrap; border-bottom:1px solid var(--border) }
-thead tr.h th:hover { color:var(--ink) }
-thead tr.h th .ar { display:inline-block; width:12px; color:var(--accent) }
-thead tr.f th { top:34px; padding:5px 6px; border-bottom:1px solid var(--border) }
-thead tr.f input { width:100%; min-width:60px; border:1px solid var(--border); border-radius:6px; padding:4px 7px;
-  background:var(--card); font-size:12px }
-thead tr.f input:focus { outline:2px solid var(--accent); outline-offset:-1px }
-thead tr.f input.on { border-color:var(--accent); background:var(--accent-soft) }
-tbody tr:nth-child(even) td { background-color:var(--zebra) }
-tbody.grouped tr:nth-child(even) td { background-color:transparent }
-tbody.grouped tr:hover td { background-color:var(--hover) }
-tbody tr:hover td { background-color:var(--hover) }
-td.t-testo.k0 { font-weight:600 }
-td.neg { color:var(--neg) }
-.kb { display:inline-block; width:56px; height:8px; background:var(--line); border-radius:4px; margin-right:10px; vertical-align:middle; overflow:hidden }
-.kb i { display:block; height:100%; background:var(--accent); opacity:.55; border-radius:4px }
-td.dim { color:var(--muted) }
-td.t-data { white-space:nowrap }
-/* separatore giorno nella vista Dettaglio */
-tbody tr.grp td { background-color:var(--grp) !important; font-weight:700; border-top:2px solid var(--accent);
-  border-bottom:1px solid var(--border); padding-top:9px; padding-bottom:9px; cursor:help }
-tbody tr.grp:first-child td { border-top:0 }
-tr.grp .gd { font-size:14px }
-tr.grp .gs { color:var(--ink2); font-weight:500; margin-left:8px; font-size:12.5px }
-tbody tr.grp + tr td { padding-top:9px }
-td.gday { color:transparent }
-/* layer: icona del tipo di geometria e righe espandibili del Dettaglio */
-.geo { display:inline-block; width:10px; height:10px; margin-right:7px; vertical-align:-1px; flex:none }
-.geo.punto { border-radius:50%; background:var(--g-punto) }
-.geo.linea { width:13px; height:3px; vertical-align:2px; border-radius:2px; background:var(--g-linea) }
-.geo.poligono { border-radius:2px; background:var(--g-poli); opacity:.8 }
-.geo.nd { border:1.5px dashed var(--muted); border-radius:2px }
-tbody tr.det { cursor:pointer }
-.car { display:inline-block; width:14px; margin-left:-4px; color:var(--ink2); transition:transform .15s }
-tr.open .car { transform:rotate(90deg) }
-tbody tr.sub td { background-color:var(--zebra) !important; font-size:12.5px; color:var(--ink2); padding-top:4px; padding-bottom:4px; cursor:pointer }
-tbody tr.sub:hover td { background-color:var(--hover) !important }
-tr.sub td.ly { padding-left:30px; color:var(--ink) }
-tr.sub .lt { color:var(--muted); margin-left:6px }
-tr.sub + tr:not(.sub) td { border-top:1px solid var(--border) }
-tfoot td { position:sticky; bottom:0; background-color:var(--head); font-weight:700; border-top:1px solid var(--border); border-bottom:0 }
-.vuoto { padding:40px; color:var(--muted); text-align:center }
-details.avvisi { margin-top:12px; color:var(--ink2); font-size:13px }
-details.avvisi summary { cursor:pointer; color:var(--warn) }
-details.avvisi li { margin:3px 0 }
-.note { color:var(--muted); font-size:12px; margin-top:10px }
-.help { color:var(--muted); font-size:12px }
-.toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:var(--tip-bg); color:var(--tip-ink);
-  padding:9px 16px; border-radius:8px; opacity:0; transition:opacity .25s; pointer-events:none; z-index:60 }
-.toast.on { opacity:1 }
+/* CHARTS */
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:700px){.charts-grid{grid-template-columns:1fr}}
+.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px}
+.chart-card h3{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px}
+.chart-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.chart-h h3{margin:0}
+.chart-h .tot{font-size:12px;color:var(--text);font-weight:600}
+.help{font-weight:500;text-transform:none;letter-spacing:0;color:var(--muted)}
+.bar-list{display:flex;flex-direction:column;gap:8px}
+.bar-item{display:grid;grid-template-columns:120px 1fr 64px;gap:8px;align-items:center;font-size:12px;cursor:pointer;border-radius:4px}
+.bar-item:hover .bar-label,.bar-item.on .bar-label{color:var(--blue)}
+.bar-item.on .bar-val{color:var(--blue)}
+.bar-label{color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar-label .geo{margin-right:5px}
+.bar-track{background:rgba(255,255,255,.06);border-radius:4px;height:7px;overflow:hidden}
+.bar-fill{height:100%;border-radius:4px;transition:width .4s}
+.bar-fill.c0{background:linear-gradient(90deg,#3fb950,#58a6ff)}
+.bar-fill.c1{background:linear-gradient(90deg,#a371f7,#58a6ff)}
+.bar-fill.c2{background:linear-gradient(90deg,#d29922,#f0883e)}
+.bar-fill.c3{background:linear-gradient(90deg,#58a6ff,#a371f7)}
+.bar-fill.neg{background:var(--red)}
+.bar-val{text-align:right;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums}
+.bar-more{font-size:11px;color:var(--muted);margin-top:2px}
+.empty-chart{color:var(--muted);font-size:12px;padding:8px 0}
 
-/* guida */
-dialog.guida { border:1px solid var(--border); border-radius:14px; padding:0; width:min(860px, calc(100vw - 32px));
-  max-height:calc(100vh - 48px); overflow:hidden; background:var(--card); color:var(--ink); box-shadow:0 20px 60px rgba(0,0,0,.35) }
-dialog.guida::backdrop { background:rgba(10,14,20,.5) }
-.g-head { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 20px; border-bottom:1px solid var(--border);
-  position:sticky; top:0; background:var(--card); z-index:1 }
-.g-head h2 { margin:0; font-size:19px }
-.g-wrap { display:grid; grid-template-columns:200px 1fr; grid-template-rows:100%; height:min(760px, calc(100vh - 120px)) }
-.g-nav { border-right:1px solid var(--border); padding:12px 8px; overflow:auto; min-height:0 }
-.g-nav button { display:block; width:100%; text-align:left; border:0; background:none; padding:6px 10px; border-radius:7px;
-  cursor:pointer; color:var(--ink2); font-size:13px }
-.g-nav button:hover, .g-nav button.on { background:var(--accent-soft); color:var(--accent) }
-.g-body { padding:6px 24px 28px; overflow:auto; line-height:1.55; position:relative; min-height:0 }
-.g-body h3 { font-size:16px; margin:22px 0 6px; padding-top:4px }
-.g-body h4 { font-size:14px; margin:14px 0 4px }
-.g-body p, .g-body li { color:var(--ink2) }
-.g-body b { color:var(--ink) }
-.g-body ul, .g-body ol { padding-left:20px; margin:6px 0 }
-.g-body li { margin:3px 0 }
-.g-body table { min-width:0; margin:8px 0 12px; font-size:13px; border:1px solid var(--border); border-radius:8px; overflow:hidden }
-.g-body th { background:var(--head); position:static; font-size:12px; color:var(--ink2) }
-.g-body th, .g-body td { padding:6px 10px; vertical-align:top }
-.esempio { background:var(--accent-soft); border-radius:10px; padding:10px 14px; margin:10px 0; color:var(--ink2) }
-.esempio b { color:var(--ink) }
-.attenz { background:var(--warn-bg); border-radius:10px; padding:10px 14px; margin:10px 0; color:var(--ink2) }
-@media (max-width:720px) {
-  input[type=search] { min-width:0; width:100% } .tw { max-height:70vh } h1 { font-size:20px }
-  .g-wrap { grid-template-columns:1fr } .g-nav { display:none } .sep { display:none }
+/* andamento giornaliero */
+.bars{display:flex;align-items:flex-end;gap:2px;height:120px;border-bottom:1px solid var(--border)}
+.bars .b{flex:1;min-width:0;position:relative;height:100%;display:flex;align-items:flex-end;cursor:pointer;border-radius:3px 3px 0 0}
+.bars .b i{display:block;width:100%;background:linear-gradient(180deg,#58a6ff,#3fb950);border-radius:3px 3px 0 0;opacity:.9;min-height:1px}
+.bars .b.we i{opacity:.45}
+.bars .b.out i{opacity:.15}
+.bars .b.zero i{background:var(--border)}
+.bars .b.neg i{background:var(--red)}
+.bars .b:hover{background:rgba(88,166,255,.08)}
+.bars .b:hover i,.bars .b.sel i{opacity:1;outline:2px solid var(--blue);outline-offset:1px}
+.xlab{display:flex;gap:2px;font-size:11px;color:var(--muted);margin-top:4px}
+.xlab span{flex:1;min-width:0;text-align:center;white-space:nowrap;overflow:visible}
+
+/* TABLE */
+.tbl-wrap{margin-bottom:20px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.tbl-head{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.tabs{display:flex;background:var(--surface2);border:1px solid var(--border);border-radius:8px;overflow:hidden;flex-wrap:wrap}
+.tabs button{border:none;background:transparent;color:var(--muted);padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;transition:background .15s,color .15s;white-space:nowrap}
+.tabs button[aria-selected=true]{background:var(--surface3);color:var(--text)}
+.tabs button:hover:not([aria-selected=true]){color:var(--text)}
+.spacer{flex:1}
+label.chk{display:inline-flex;gap:6px;align-items:center;color:var(--muted);font-size:12px;font-weight:600;cursor:pointer}
+label.chk input{accent-color:var(--blue)}
+.info{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:8px 14px;border-bottom:1px solid var(--border)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.chip{background:rgba(88,166,255,.12);color:var(--blue);border-radius:20px;padding:2px 6px 2px 10px;font-size:11px;font-weight:600;display:inline-flex;gap:4px;align-items:center}
+.chip button{border:0;background:none;color:inherit;cursor:pointer;padding:0 3px;font-size:14px;line-height:1}
+.tw{overflow:auto;max-height:calc(100vh - 140px);min-height:240px}
+table{width:100%;border-collapse:separate;border-spacing:0;min-width:960px}
+th,td{text-align:left}
+thead th{background:var(--surface2);position:sticky;z-index:2}
+thead tr.h th{top:0;height:38px;padding:0 10px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);border-bottom:1px solid var(--border);white-space:nowrap;cursor:pointer;user-select:none;font-weight:600}
+thead tr.h th:hover{color:var(--text)}
+thead tr.h th .ar{display:inline-block;width:12px;font-size:10px;color:var(--accent-h)}
+thead tr.f th{top:38px;padding:5px 6px;border-bottom:1px solid var(--border)}
+thead tr.f input{width:100%;min-width:56px;border:1px solid var(--border);border-radius:6px;padding:4px 7px;background:var(--surface);font-size:11.5px;outline:none}
+thead tr.f input::placeholder{color:#5b636d}
+thead tr.f input:focus{border-color:var(--blue)}
+thead tr.f input.on{border-color:var(--blue);background:rgba(88,166,255,.1)}
+tbody td{padding:8px 10px;font-size:13px;border-bottom:1px solid var(--border)}
+tbody tr:hover td{background-color:rgba(88,166,255,.05)}
+tbody tr:last-child td{border-bottom:none}
+td.neg{color:var(--red)}
+td.dim{color:var(--muted)}
+td.t-data{white-space:nowrap}
+td.t-km.num{font-weight:600}
+td[data-k=km_netti]{color:var(--teal);font-weight:700}
+td[data-k=km_netti].neg{color:var(--red)}
+td[data-k=punti]{color:var(--g-punto);font-weight:600}
+td[data-k=punti].dim{color:var(--muted);font-weight:400}
+.kb{display:inline-block;width:40px;height:7px;background:rgba(255,255,255,.06);border-radius:4px;margin-right:8px;vertical-align:middle;overflow:hidden}
+.kb i{display:block;height:100%;background:linear-gradient(90deg,#3fb950,#58a6ff);border-radius:4px}
+.tag-user{background:rgba(163,113,247,.15);color:var(--purple);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600;white-space:nowrap;display:inline-block}
+.tag-act{background:rgba(46,160,67,.12);color:var(--accent-h);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600;display:inline-block;white-space:nowrap}
+.tag-layer{background:rgba(88,166,255,.12);color:var(--blue);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600;display:inline-block;white-space:nowrap}
+/* tipo di geometria */
+.geo{display:inline-block;width:9px;height:9px;margin-right:7px;vertical-align:0;flex:none}
+.geo.punto{border-radius:50%;background:var(--g-punto)}
+.geo.linea{width:13px;height:3px;vertical-align:3px;border-radius:2px;background:var(--g-linea)}
+.geo.poligono{border-radius:2px;background:var(--g-poli)}
+.geo.nd{border:1.5px dashed var(--muted);border-radius:2px}
+/* separatore giorno */
+tbody tr.grp td{background-color:rgba(88,166,255,.08)!important;font-weight:700;border-top:2px solid var(--blue);padding-top:9px;padding-bottom:9px;cursor:help}
+tbody tr.grp:first-child td{border-top:0}
+tr.grp .gd{font-size:13.5px}
+tr.grp .gs{color:var(--muted);font-weight:500;margin-left:8px;font-size:12px}
+td.gday{color:transparent}
+/* righe del Dettaglio espandibili per layer */
+tbody tr.det{cursor:pointer}
+.car{display:inline-block;width:14px;margin-left:-2px;font-size:12px;color:var(--muted);transition:transform .15s}
+tr.open .car{transform:rotate(90deg);color:var(--blue)}
+tr.open td{background-color:rgba(88,166,255,.04)}
+tbody tr.sub td{background-color:var(--bg)!important;font-size:12px;color:var(--muted);padding-top:5px;padding-bottom:5px;cursor:pointer;border-bottom:1px dashed var(--border)}
+tbody tr.sub:hover td{background-color:rgba(88,166,255,.06)!important}
+tr.sub td.ly{padding-left:34px;color:var(--text)}
+tr.sub .lt{color:var(--muted);margin-left:6px}
+tfoot td{position:sticky;bottom:0;background:var(--surface2);font-weight:700;border-top:1px solid var(--border);padding:10px;font-size:13px}
+.vuoto{padding:40px!important;text-align:center;color:var(--muted)}
+.footer-bar{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-top:1px solid var(--border);font-size:11px;color:var(--muted);flex-wrap:wrap;gap:8px}
+.export-btn{background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:5px 12px;font-size:11px;font-weight:600;cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+.export-btn:hover{border-color:var(--blue);color:var(--blue)}
+.export-btn:disabled{opacity:.45;cursor:default}
+.export-btn svg{width:13px;height:13px}
+
+/* AVVISI / NOTE */
+details.avvisi{margin-bottom:12px;font-size:13px}
+details.avvisi summary{cursor:pointer;font-weight:600}
+details.avvisi ul{margin:8px 0 0 18px;color:var(--text)}
+details.avvisi li{margin:3px 0}
+.note{color:var(--muted);font-size:12px}
+.note b{color:var(--text)}
+.linkbtn{border:0;background:none;color:var(--blue);cursor:pointer;padding:0;font:inherit;text-decoration:underline}
+
+/* TOOLTIP / TOAST */
+.tip{position:fixed;pointer-events:none;background:var(--surface3);color:var(--text);border:1px solid var(--border2);padding:9px 12px;border-radius:8px;font-size:12.5px;line-height:1.5;display:none;z-index:50;max-width:360px;box-shadow:0 8px 24px rgba(0,0,0,.5)}
+.tip .ctx{color:var(--muted);font-size:11.5px;margin-bottom:3px}
+.tip .big{font-size:14px;font-weight:700}
+.tip .hint{color:var(--muted);font-size:11.5px;margin-top:4px}
+.tip b{color:#fff}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--surface3);color:var(--text);border:1px solid var(--border2);padding:9px 16px;border-radius:8px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:60;font-size:13px;box-shadow:0 8px 24px rgba(0,0,0,.5)}
+.toast.on{opacity:1}
+
+/* EMPTY */
+#empty-state{text-align:center;padding:60px 20px;color:var(--muted)}
+#empty-state .es-icon{font-size:48px;margin-bottom:16px;opacity:.4}
+#empty-state h2{font-size:16px;font-weight:600;color:var(--text);margin-bottom:8px}
+#empty-state p{font-size:13px;max-width:420px;margin:0 auto}
+
+/* GUIDA */
+dialog.guida{border:1px solid var(--border);border-radius:14px;padding:0;width:min(880px,calc(100vw - 32px));max-height:calc(100vh - 48px);overflow:hidden;background:var(--surface);color:var(--text);box-shadow:0 20px 60px rgba(0,0,0,.6);margin:auto}
+dialog.guida::backdrop{background:rgba(1,4,9,.7)}
+.g-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 20px;border-bottom:1px solid var(--border);background:var(--surface)}
+.g-head h2{font-size:17px}
+.g-wrap{display:grid;grid-template-columns:200px 1fr;grid-template-rows:100%;height:min(760px,calc(100vh - 120px))}
+.g-nav{border-right:1px solid var(--border);padding:12px 8px;overflow:auto;min-height:0;background:var(--surface2)}
+.g-nav button{display:block;width:100%;text-align:left;border:0;background:none;padding:6px 10px;border-radius:6px;cursor:pointer;color:var(--muted);font-size:13px}
+.g-nav button:hover,.g-nav button.on{background:rgba(88,166,255,.1);color:var(--blue)}
+.g-body{padding:6px 24px 28px;overflow:auto;line-height:1.6;position:relative;min-height:0}
+.g-body h3{font-size:15px;margin:22px 0 6px;padding-top:4px}
+.g-body h4{font-size:13.5px;margin:14px 0 4px}
+.g-body p,.g-body li{color:#c9d1d9;font-size:13.5px}
+.g-body p{margin:6px 0}
+.g-body b{color:var(--text)}
+.g-body ul,.g-body ol{padding-left:20px;margin:6px 0}
+.g-body li{margin:3px 0}
+.g-body table{min-width:0;margin:8px 0 12px;font-size:13px;border:1px solid var(--border);border-radius:8px;overflow:hidden;border-collapse:separate;border-spacing:0}
+.g-body th{background:var(--surface2);position:static;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.g-body th,.g-body td{padding:7px 10px;vertical-align:top;border-bottom:1px solid var(--border)}
+.g-body tr:last-child td{border-bottom:0}
+.esempio{background:rgba(88,166,255,.08);border:1px solid rgba(88,166,255,.2);border-radius:8px;padding:10px 14px;margin:10px 0;color:#c9d1d9}
+.attenz{background:rgba(210,153,34,.1);border:1px solid rgba(210,153,34,.25);border-radius:8px;padding:10px 14px;margin:10px 0;color:#c9d1d9}
+@media(max-width:720px){
+  .app{padding:16px 16px 40px} .tw{max-height:70vh}
+  .g-wrap{grid-template-columns:1fr} .g-nav{display:none}
+  .bar-item{grid-template-columns:96px 1fr 56px}
 }
 </style>
 </head>
 <body>
-<main>
-  <header>
-    <div>
-      <h1>Produzione WO SINFI</h1>
-      <div class="sub" id="sub">Caricamento…</div>
+<div class="app">
+  <div class="header">
+    <div class="header-left">
+      <h1>Produzione WO SINFI <span class="version-badge" id="badge">caricamento…</span></h1>
+      <p id="sub">Caricamento…</p>
     </div>
-    <div class="sync">
+    <div class="header-actions">
       <button class="btn" id="bGuida" data-tip="Spiegazione completa: come funziona la board e come leggere i numeri">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><path d="M9.3 9.2a2.8 2.8 0 0 1 5.4 1c0 1.9-2.7 2.5-2.7 4"/><path d="M12 17.3h.01"/></svg>
         Guida</button>
@@ -218,53 +270,107 @@ dialog.guida::backdrop { background:rgba(10,14,20,.5) }
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6"/><path d="M20 4 10 14"/><path d="M19 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/></svg>
         <span>Aggiorna ora</span></a>
     </div>
-  </header>
-  <div class="banner" id="banner"></div>
+  </div>
+  <div class="alert alert-err" id="banner" hidden></div>
 
-  <section class="kpis" id="kpis"></section>
+  <div id="report">
+    <div id="layer-pills"></div>
+    <section class="kpis" id="kpis"></section>
 
-  <section class="card chart">
-    <div class="chart-h"><span id="chartTit"></span><span id="chartTot"></span></div>
-    <div class="bars" id="bars"></div>
-    <div class="xlab" id="xlab"></div>
-  </section>
+    <div class="main-grid">
+      <aside class="filter-panel">
+        <div class="panel-title">Filtri</div>
+        <div class="filter-group">
+          <label class="fl" for="q">Ricerca globale</label>
+          <input class="fi" type="search" id="q" placeholder="Cerca…" autocomplete="off"
+            data-tip="Cerca in operatore, progetto e layer insieme. Più parole separate da virgola = una qualsiasi (es. <code>rperri, FGN</code>). Con <code>!</code> escludi (es. <code>!test</code>).">
+        </div>
+        <div class="filter-group">
+          <label class="fl" for="fPer">Periodo</label>
+          <select class="fi" id="fPer" data-tip="Scegli il periodo da analizzare: tabella, riquadri, grafici ed export Excel si aggiornano subito.<div class='hint'>Sono disponibili gli ultimi 12 mesi. Per un periodo preciso usa le due date qui sotto.</div>"></select>
+        </div>
+        <div class="filter-group">
+          <label class="fl">Intervallo date</label>
+          <div class="date-row">
+            <input class="fi" type="date" id="fDa" aria-label="Dal" data-tip="Mostra i dati <b>dal</b> giorno indicato (giorno di sincronizzazione)">
+            <input class="fi" type="date" id="fA" aria-label="Al" data-tip="Mostra i dati <b>fino al</b> giorno indicato (compreso)">
+          </div>
+        </div>
+        <hr class="filter-divider">
+        <div class="filter-group">
+          <label class="fl" for="fOp">Operatore</label>
+          <select class="fi" id="fOp" data-g="operatore"><option value="">— Tutti —</option></select>
+        </div>
+        <div class="filter-group">
+          <label class="fl" for="fProg">Progetto</label>
+          <select class="fi" id="fProg" data-g="progetto"><option value="">— Tutti —</option></select>
+        </div>
+        <div class="filter-group">
+          <label class="fl" for="fLayer">Layer</label>
+          <select class="fi" id="fLayer" data-g="layer"><option value="">— Tutti —</option></select>
+        </div>
+        <div class="filter-group">
+          <label class="fl" for="fGeom">Tipo elemento</label>
+          <select class="fi" id="fGeom" data-g="geom"><option value="">— Tutti —</option><option value="punto">Punti</option><option value="linea">Linee</option><option value="poligono">Poligoni</option><option value="nd">Non rilevato</option></select>
+        </div>
+        <div class="btn-row">
+          <button class="btn" id="bReset" data-tip="Toglie periodo, ricerca, filtri del pannello e filtri di colonna della vista corrente">Reset</button>
+        </div>
+        <div class="result-info" id="resInfo"></div>
+      </aside>
 
-  <section class="card">
-    <div class="toolbar">
-      <div class="tabs" role="tablist" id="tabs"></div>
-      <div class="range">
-        <select id="fPer" aria-label="Periodo" data-tip="Scegli il periodo da analizzare: tabella, riquadri, grafico ed export Excel si aggiornano subito.<div class='hint'>Sono disponibili gli ultimi 12 mesi. Per un periodo preciso usa le due date qui accanto.</div>"></select>
-        <input type="date" id="fDa" aria-label="Dal" data-tip="Mostra i dati <b>dal</b> giorno indicato (giorno di sincronizzazione)"> –
-        <input type="date" id="fA" aria-label="Al" data-tip="Mostra i dati <b>fino al</b> giorno indicato (compreso)">
+      <div class="right-col">
+        <div class="chart-card">
+          <div class="chart-h"><h3 id="chartTit"></h3><span class="tot" id="chartTot"></span></div>
+          <div class="bars" id="bars"></div>
+          <div class="xlab" id="xlab"></div>
+        </div>
+        <div class="charts-grid">
+          <div class="chart-card"><h3>Km netti per operatore</h3><div class="bar-list" id="chOp"></div></div>
+          <div class="chart-card"><h3>Ore lavoro per operatore</h3><div class="bar-list" id="chOre"></div></div>
+          <div class="chart-card"><h3>Elementi creati per layer</h3><div class="bar-list" id="chLayer"></div></div>
+          <div class="chart-card"><h3>Km netti per progetto</h3><div class="bar-list" id="chProg"></div></div>
+        </div>
+
       </div>
-      <input type="search" id="q" placeholder="Cerca operatore, progetto, layer…" aria-label="Cerca"
-        data-tip="Cerca in operatore, progetto e layer insieme. Più parole separate da virgola = una qualsiasi (es. <code>rperri, FGN</code>). Con <code>!</code> escludi (es. <code>!test</code>).">
     </div>
-    <div class="info"><span id="info" class="chips"></span><span class="spacer"></span>
-      <label class="chk" id="lLayer" hidden data-tip="Apre tutte le righe e mostra, sotto ognuna, il lavoro diviso per <b>layer</b> (punti, linee, poligoni).<div class='hint'>Puoi anche aprire o chiudere una sola riga con un clic.</div>"><input type="checkbox" id="cLayer"> Mostra layer</label>
-      <button class="btn" id="bReset" data-tip="Toglie periodo, ricerca e filtri di colonna della vista corrente">Azzera filtri</button>
-      <button class="btn" id="bXls" data-tip="Scarica in Excel <b>esattamente</b> la tabella a schermo: stessa vista, stessi filtri, stesso ordinamento. Nel foglio <i>Info</i> trovi i filtri applicati.">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
-        Esporta Excel</button>
-    </div>
-    <div class="tw" id="tw">
-      <table>
-        <thead id="th"></thead>
-        <tbody id="tb"></tbody>
-        <tfoot id="tf"></tfoot>
-      </table>
-    </div>
-  </section>
 
-  <details class="avvisi" id="avvisi" hidden><summary></summary><ul></ul></details>
-  <p class="note">
-    <b>Km netti</b> = linee nuove + allungamenti − accorciamenti − cancellazioni · <b>Km nuovi</b> = solo linee create ·
-    <b>di cui punti</b> = elementi puntuali creati (nodi, pali, pozzetti, note) ·
-    <b>Inizio / Fine</b> = prima e ultima foto della giornata ·
-    i giorni sono quelli di <b>sincronizzazione</b> (ora italiana), per le foto quelli di scatto. Passa il mouse su colonne e celle per i dettagli,
-    oppure apri la <button class="linkbtn" id="bGuida2">Guida</button>.
-  </p>
-</main>
+    <div class="tbl-wrap">
+      <div class="tbl-head">
+        <div class="tabs" role="tablist" id="tabs"></div>
+        <span class="spacer"></span>
+        <label class="chk" id="lLayer" hidden data-tip="Apre tutte le righe e mostra, sotto ognuna, il lavoro diviso per <b>layer</b> (punti, linee, poligoni).<div class='hint'>Puoi anche aprire o chiudere una sola riga con un clic.</div>"><input type="checkbox" id="cLayer"> Mostra layer</label>
+      </div>
+      <div class="info" id="infoRow" hidden><span id="info" class="chips"></span></div>
+      <div class="tw" id="tw">
+        <table>
+          <thead id="th"></thead>
+          <tbody id="tb"></tbody>
+          <tfoot id="tf"></tfoot>
+        </table>
+      </div>
+      <div class="footer-bar">
+        <span id="footer-count"></span>
+        <button class="export-btn" id="bXls" data-tip="Scarica in Excel <b>esattamente</b> la tabella a schermo: stessa vista, stessi filtri, stesso ordinamento. Nel foglio <i>Info</i> trovi i filtri applicati."><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg> Esporta Excel</button>
+      </div>
+    </div>
+
+    <details class="avvisi alert alert-warn" id="avvisi" hidden><summary></summary><ul></ul></details>
+    <p class="note">
+      <b>Km netti</b> = linee nuove + allungamenti − accorciamenti − cancellazioni · <b>Km nuovi</b> = solo linee create ·
+      <b>di cui punti</b> = elementi puntuali creati (nodi, pali, pozzetti, note) ·
+      <b>Inizio / Fine</b> = prima e ultima foto della giornata ·
+      i giorni sono quelli di <b>sincronizzazione</b> (ora italiana), per le foto quelli di scatto. Passa il mouse su riquadri, grafici e celle per i dettagli,
+      oppure apri la <button class="linkbtn" id="bGuida2">Guida</button>.
+    </p>
+  </div>
+
+  <div id="empty-state" hidden>
+    <div class="es-icon">🗂</div>
+    <h2>Nessun dato caricato</h2>
+    <p>I dati della board non sono ancora disponibili. Controlla la connessione e premi <b>Ricarica</b>.</p>
+  </div>
+</div>
 
 <dialog class="guida" id="guida" aria-labelledby="gTit">
   <div class="g-head">
@@ -344,10 +450,12 @@ Per questo:</p>
     Nella vista <b>Per giorno</b> inizio, fine e ore sono quelli di tutta la squadra (prima foto del primo operatore, ultima dell'ultimo).</li>
 </ul>
 <h4>I riquadri in alto</h4>
-<p>Riassumono <b>quello che vedi in tabella</b>, quindi cambiano con la vista e con i filtri. <b>Km medi operatore/giorno</b> = km netti ÷ giornate-operatore,
+<p>Riassumono <b>quello che vedi in tabella</b>, quindi cambiano con la vista e con i filtri. <b>Ore lavoro</b> = per ogni operatore e giorno, il tempo tra la prima e l'ultima foto su tutti i progetti, sommato. <b>Km medi operatore/giorno</b> = km netti ÷ giornate-operatore,
 dove una giornata-operatore è un operatore che ha sincronizzato in un certo giorno (3 operatori per 2 giorni = 6 giornate).</p>
-<h4>Il grafico</h4>
-<p>Il grafico mostra il <b>periodo scelto</b>: ogni barra è un giorno e l'altezza sono i km netti. Le barre più chiare sono sabato e domenica, quelle grigie
+<h4>I grafici</h4>
+<p>I quattro grafici a barre mostrano i primi 8 valori del periodo: km netti per operatore, <b>ore lavoro</b> per operatore (prima → ultima foto di ogni giornata),
+elementi creati per layer e km netti per progetto. Passa il mouse su una barra per i dettagli.</p>
+<p>Il grafico dell'andamento mostra il <b>periodo scelto</b>: ogni barra è un giorno e l'altezza sono i km netti. Le barre più chiare sono sabato e domenica, quelle grigie
 sono giorni senza produzione. Se il periodo supera i 3 mesi, ogni barra è una <b>settimana</b> (da lunedì a domenica).
 <b>Clic su una barra</b> per vedere solo quel giorno o quella settimana, clic di nuovo sulla stessa barra per tornare al periodo di prima. Il grafico segue
 la ricerca e i filtri su operatore, progetto e layer.</p>
@@ -368,12 +476,15 @@ la ricerca e i filtri su operatore, progetto e layer.</p>
 <p>L'ultima vista scelta e il suo ordinamento vengono ricordati alla prossima apertura.</p>
 
 <h3 id="g-filtri">6. Filtrare e ordinare</h3>
-<h4>Filtri generali</h4>
+<h4>Filtri generali (pannello a sinistra)</h4>
 <ul>
   <li><b>Periodo</b>: scegli un periodo rapido (ultimi 7, 30 o 60 giorni, mese corrente, mese scorso, anno corrente, tutto lo storico). Alla prossima apertura la board
     riparte dallo stesso periodo, aggiornato al giorno corrente. All'apertura sono mostrati gli ultimi 60 giorni.</li>
   <li><b>Date dal / al</b>: per un periodo preciso, dentro gli ultimi 12 mesi. Il periodo diventa <i>Personalizzato</i>.</li>
-  <li><b>Cerca</b>: cerca contemporaneamente in operatore, progetto e layer.</li>
+  <li><b>Ricerca globale</b>: cerca contemporaneamente in operatore, progetto e layer.</li>
+  <li><b>Operatore, Progetto, Layer, Tipo elemento</b>: mostrano solo quel valore in tutta la board (riquadri, grafici, tabella, Excel). Il filtro attivo ha il bordo blu.</li>
+  <li>Le <b>pillole dei layer</b> in alto e le voci dei <b>grafici a barre</b> sono cliccabili: un clic imposta il filtro corrispondente, un secondo clic lo toglie.</li>
+  <li><b>Reset</b> toglie tutti i filtri e torna agli ultimi 60 giorni.</li>
 </ul>
 <h4>Filtri di colonna</h4>
 <p>Sotto ogni intestazione c'è una casella. Si scrive e la tabella si aggiorna subito.</p>
@@ -527,7 +638,13 @@ const PERIODI = {
   "custom":{l:"Personalizzato"},
 };
 const PERIODO_DEF = "60";
-let ui = {vista:"dettaglio", sort:{}, filtri:{}, q:"", da:"", a:"", periodo:PERIODO_DEF, prima:null, layer:false};
+let ui = {vista:"dettaglio", sort:{}, filtri:{}, q:"", da:"", a:"", periodo:PERIODO_DEF, prima:null, layer:false,
+  f:{operatore:"", progetto:"", layer:"", geom:""}};  // f = filtri del pannello a sinistra
+const GLAB = {operatore:"Operatore", progetto:"Progetto", layer:"Layer", geom:"Tipo"};
+const GSEL = {operatore:"fOp", progetto:"fProg", layer:"fLayer", geom:"fGeom"};
+const geomF = r => r.geom || "nd";
+// filtri del pannello (operatore, progetto, layer, tipo); "salta" ne ignora uno (per i conteggi delle pillole)
+const passaPannello = (r, salta) => Object.entries(ui.f).every(([k, v]) => !v || k === salta || (k === "geom" ? geomF(r) : r[k]) === v);
 try { const s = JSON.parse(localStorage.getItem("board_ui") || "{}"); ui.vista = s.vista || ui.vista; ui.sort = s.sort || {}; ui.periodo = s.periodo || ui.periodo; ui.layer = !!s.layer; } catch(e) {}
 if (!VISTE[ui.vista]) ui.vista = "dettaglio";
 if (!PERIODI[ui.periodo] || ui.periodo === "custom") ui.periodo = PERIODO_DEF;
@@ -572,11 +689,11 @@ function matchOra(v, f) {
 function testoCella(k, v) { return COL[k].t === "data" ? dLab(v) : v; }
 
 /* ---------- calcolo ---------- */
-function righeBase() {
+function righeBase(salta) {
   const R = DATI ? DATI.righe : [];
   const q = ui.q.trim();
   return R.filter(r => (!ui.da || r.giorno >= ui.da) && (!ui.a || r.giorno <= ui.a) &&
-    (!q || matchTesto(`${r.operatore} ${r.progetto} ${r.layer}`, q)));
+    (!q || matchTesto(`${r.operatore} ${r.progetto} ${r.layer}`, q)) && passaPannello(r, salta));
 }
 function aggrega(R, vista) {
   const V = VISTE[vista], acc = new Map();
@@ -676,6 +793,9 @@ function cella(r, k, i, maxKm, nascondiGiorno) {
   let html = fmt(k, v);
   if (COL[k].bar) html = `<span class="kb"><i style="width:${(Math.max(0, v) / maxKm * 100).toFixed(1)}%"></i></span>${html}`;
   if (k === "tipo") html = geoIco(r.geom) + html;
+  else if (k === "operatore") html = `<span class="tag-user">${html}</span>`;
+  else if (k === "progetto") html = `<span class="tag-act">${html}</span>`;
+  else if (k === "layer") html = `<span class="tag-layer">${html}</span>`;
   if (k === "giorno" && ui.vista === "dettaglio") html = `<span class="car" aria-hidden="true">▸</span>` + html;
   return `<td class="${cls}" data-k="${k}">${html}</td>`;
 }
@@ -736,31 +856,84 @@ function renderBody() {
     : i < nk ? "" : `<td class="num${TOT[k] < -0.0005 ? " neg" : ""}" data-k="${k}">${fmt(k, TOT[k])}</td>`).join("")}</tr>` : "";
   return src;
 }
+// ore lavoro per operatore e giorno: dalla prima all'ultima foto della giornata, su tutti i progetti
+function giornateOp(src) {
+  const m = new Map();
+  for (const r of src) if (r.inizio) {
+    const k = r.giorno + "|" + r.operatore, o = m.get(k) || {operatore:r.operatore, giorno:r.giorno, inizio:"", fine:""};
+    o.inizio = minOra(o.inizio, r.inizio); o.fine = maxOra(o.fine, r.fine); m.set(k, o);
+  }
+  return [...m.values()].map(o => ({...o, ore:(minuti(o.fine) - minuti(o.inizio)) / 60}));
+}
+const fmtOre = v => F.ore.format(v);
 function renderKpi(src) {
   const s = m => src.reduce((a, r) => a + r[m], 0);
-  const ops = new Set(src.map(r => r.operatore)), prj = new Set(src.map(r => r.progetto));
+  const ops = new Set(src.filter(sincr).map(r => r.operatore)), prj = new Set(src.map(r => r.progetto));
   const gOp = new Set(src.filter(sincr).map(r => r.operatore + "|" + r.giorno)).size;
-  const kn = s("km_netti"), kv = s("km_nuovi");
+  const kn = s("km_netti"), kv = s("km_nuovi"), go = giornateOp(src), ore = go.reduce((a, o) => a + o.ore, 0);
   const nota = "<div class='hint'>Calcolato su quello che vedi in tabella (vista e filtri attuali).</div>";
   const k = [
-    ["Km netti", F.km.format(kn), "km", `<b>Km netti</b>: ${COL.km_netti.d}${nota}`],
-    ["Km nuovi", F.km.format(kv), "km", `<b>Km nuovi</b>: ${COL.km_nuovi.d}` +
+    ["Km netti", F.km.format(kn), "km", "teal", `<b>Km netti</b>: ${COL.km_netti.d}${nota}`],
+    ["Km nuovi", F.km.format(kv), "km", "blue", `<b>Km nuovi</b>: ${COL.km_nuovi.d}` +
       (kv > 0 ? `<br>Differenza con i netti: <b>${F.km.format(kv - kn)} km</b> tolti da accorciamenti e cancellazioni.` : "") + nota],
-    ["Elementi creati", F.int.format(s("create")), "", `<b>Elementi creati</b>: linee, punti e poligoni nuovi, di cui <b>${plur(s("punti"), "punto", "punti")}</b>.<br>Modificate: ${F.int.format(s("modificate"))} · Cancellate: ${F.int.format(s("cancellate"))}${nota}`],
-    ["Punti creati", F.int.format(s("punti")), "", `<b>Elementi puntuali creati</b> (nodi, pali, pozzetti, note…), per layer:<br>${elencoLayer(src, "punti") || "nessuno"}${nota}`],
-    ["Operatori attivi", F.int.format(ops.size), "", ops.size ? `<b>Operatori con almeno una sincronizzazione:</b><br>${elenco(ops, 20)}` : "Nessun operatore"],
-    ["Km medi operatore/giorno", F.dec.format(gOp ? kn / gOp : 0), "km",
+    ["Elementi creati", F.int.format(s("create")), "", "green", `<b>Elementi creati</b>: linee, punti e poligoni nuovi, di cui <b>${plur(s("punti"), "punto", "punti")}</b>.<br>Modificate: ${F.int.format(s("modificate"))} · Cancellate: ${F.int.format(s("cancellate"))}${nota}`],
+    ["Punti creati", F.int.format(s("punti")), "", "punto", `<b>Elementi puntuali creati</b> (nodi, pali, pozzetti, note…), per layer:<br>${elencoLayer(src, "punti") || "nessuno"}${nota}`],
+    ["Ore lavoro", F.int.format(Math.round(ore)), "h", "purple", `<b>Ore lavoro totali: ${fmtOre(ore)}</b> (ore:minuti). Per ogni operatore e giorno, dalla prima all'ultima foto (su tutti i progetti del giorno), sommate.` +
+      `<br>${plur(go.length, "giornata con foto", "giornate con foto")} · media <b>${fmtOre(go.length ? ore / go.length : 0)} h</b> a giornata.${nota}`],
+    ["Operatori", F.int.format(ops.size), "", "orange", ops.size ? `<b>Operatori con almeno una sincronizzazione:</b><br>${elenco(ops, 20)}` : "Nessun operatore"],
+    ["Km operatore/giorno", F.dec.format(gOp ? kn / gOp : 0), "km", "blue",
       `<b>Resa media di un operatore in un giorno di lavoro.</b><br>${F.km.format(kn)} km netti ÷ ${plur(gOp, "giornata-operatore", "giornate-operatore")}.<div class='hint'>Una giornata-operatore = un operatore che ha sincronizzato in un giorno (3 operatori per 2 giorni = 6).</div>`],
-    ["Progetti attivi", F.int.format(prj.size), "", prj.size ? `<b>Progetti con attività:</b><br>${elenco(prj, 20)}` : "Nessun progetto"],
+    ["Progetti", F.int.format(prj.size), "", "green", prj.size ? `<b>Progetti con attività:</b><br>${elenco(prj, 20)}` : "Nessun progetto"],
   ];
-  $("kpis").innerHTML = k.map(([l, v, u, t]) => `<div class="kpi" data-tip="${esc(t)}"><div class="l">${l}</div><div class="v">${v}${u ? `<small>${u}</small>` : ""}</div></div>`).join("");
+  $("kpis").innerHTML = k.map(([l, v, u, c, t]) => `<div class="kpi" data-tip="${esc(t)}"><div class="kpi-label">${l}</div><div class="kpi-value ${c}">${v}${u ? `<small>${u}</small>` : ""}</div></div>`).join("");
+}
+// pillole dei layer: i più usati nel periodo (conteggio = elementi creati), clic = filtro Layer
+const MAX_PILLOLE = 12;
+function renderPills() {
+  const R = righeBase("layer"), acc = new Map();
+  for (const r of R) { const a = acc.get(r.layer) || {n:0, geom:""}; a.n += r.create; a.geom ||= r.geom; acc.set(r.layer, a); }
+  let L = [...acc.entries()].filter(([, a]) => a.n).sort((x, y) => y[1].n - x[1].n);
+  const tot = L.reduce((t, [, a]) => t + a.n, 0), altri = L.length - MAX_PILLOLE;
+  const sel = ui.f.layer, top = L.slice(0, MAX_PILLOLE);
+  if (sel && !top.some(([l]) => l === sel)) top.push([sel, acc.get(sel) || {n:0, geom:""}]);
+  $("layer-pills").innerHTML = `<div class="layer-pill${sel ? "" : " active"}" data-layer="" data-tip="Tutti i layer: ${plur(tot, "elemento creato", "elementi creati")} nel periodo">Tutti i layer<span class="pill-count">${F.int.format(tot)}</span></div>` +
+    top.map(([l, a]) => `<div class="layer-pill${sel === l ? " active" : ""}" data-layer="${esc(l)}" data-tip="<b>${esc(l)}</b> · ${geoL(a.geom)}<br>${plur(a.n, "elemento creato", "elementi creati")}<div class='hint'>${sel === l ? "Clic per togliere il filtro" : "Clic per vedere solo questo layer"}</div>"><span class="dot" style="background:var(--g-${a.geom === "poligono" ? "poli" : a.geom || "x"}, var(--muted))"></span>${esc(l)}<span class="pill-count">${F.int.format(a.n)}</span></div>`).join("") +
+    (altri > 0 ? `<div class="layer-pill" style="cursor:default;opacity:.6" data-tip="Gli altri layer sono nel filtro <b>Layer</b> del pannello">+${altri} layer</div>` : "");
+}
+// grafici a barre orizzontali; clic su una voce = filtro del pannello
+function barList(id, voci, chiave, fmtV, cls, max = 8) {
+  const el = $(id);
+  if (!voci.length) { el.innerHTML = `<div class="empty-chart">Nessun dato</div>`; return; }
+  const top = Math.max(1e-9, ...voci.map(v => Math.abs(v.v)));
+  el.innerHTML = voci.slice(0, max).map(v => {
+    const on = ui.f[chiave] === v.k;
+    return `<div class="bar-item${on ? " on" : ""}" data-g="${chiave}" data-v="${esc(v.k)}" data-tip="${esc(`<b>${esc(v.k)}</b><br>${v.tip}<div class='hint'>${on ? "Clic per togliere il filtro" : "Clic per filtrare tutta la board"}</div>`)}">` +
+      `<div class="bar-label">${v.ico || ""}${esc(v.k)}</div><div class="bar-track"><div class="bar-fill ${v.v < 0 ? "neg" : cls}" style="width:${Math.max(3, Math.abs(v.v) / top * 100).toFixed(1)}%"></div></div>` +
+      `<div class="bar-val">${fmtV(v.v)}</div></div>`;
+  }).join("") + (voci.length > max ? `<div class="bar-more">e altri ${voci.length - max}</div>` : "");
+}
+function somma(src, chiave, m) {
+  const acc = new Map();
+  for (const r of src) { const a = acc.get(r[chiave]) || {k:r[chiave], v:0, km:0, c:0, p:0, geom:"", o:new Set()}; a.v += r[m]; a.km += r.km_netti; a.c += r.create; a.p += r.punti; a.geom ||= r.geom; if (sincr(r)) a.o.add(r.operatore); acc.set(r[chiave], a); }
+  return [...acc.values()];
+}
+function renderBarre(src) {
+  barList("chOp", somma(src, "operatore", "km_netti").filter(a => a.v || a.c).sort((x, y) => y.v - x.v)
+    .map(a => ({...a, tip:`${F.km.format(a.km)} km netti · ${plur(a.c, "elemento creato", "elementi creati")} (${plur(a.p, "punto", "punti")})`})), "operatore", v => F.km.format(v), "c0");
+  const ore = new Map();
+  giornateOp(src).forEach(o => { const a = ore.get(o.operatore) || {k:o.operatore, v:0, g:0}; a.v += o.ore; a.g++; ore.set(o.operatore, a); });
+  barList("chOre", [...ore.values()].map(a => ({...a, tip:`${fmtOre(a.v)} h in ${plur(a.g, "giornata", "giornate")} · media ${fmtOre(a.v / a.g)} h`})).sort((x, y) => y.v - x.v), "operatore", fmtOre, "c1");
+  barList("chLayer", somma(src, "layer", "create").filter(a => a.v).sort((x, y) => y.v - x.v)
+    .map(a => ({...a, ico:geoIco(a.geom), tip:`${geoL(a.geom)} · ${plur(a.c, "elemento creato", "elementi creati")}` + (a.geom === "linea" ? ` · ${F.km.format(a.km)} km netti` : "")})), "layer", v => F.int.format(v), "c3");
+  barList("chProg", somma(src, "progetto", "km_netti").filter(a => a.v || a.c).sort((x, y) => y.v - x.v)
+    .map(a => ({...a, tip:`${F.km.format(a.km)} km netti · ${plur(a.c, "elemento creato", "elementi creati")} (${plur(a.p, "punto", "punti")}) · ${plur(a.o.size, "operatore", "operatori")}`})), "progetto", v => F.km.format(v), "c2");
 }
 // righe per il grafico: stessa ricerca e filtri su operatore/progetto/layer (il periodo lo decide renderChart)
 let BARRE = [], finestra = null;
 function righeGrafico() {
   if (!DATI) return [];
   const fv = ui.filtri[ui.vista] || {}, q = ui.q.trim();
-  return DATI.righe.filter(r => (!q || matchTesto(`${r.operatore} ${r.progetto} ${r.layer}`, q)) &&
+  return DATI.righe.filter(r => (!q || matchTesto(`${r.operatore} ${r.progetto} ${r.layer}`, q)) && passaPannello(r) &&
     ["operatore","progetto","layer"].every(k => !fv[k] || !COLS.includes(k) || matchTesto(r[k], fv[k])));
 }
 function renderChart(src) {
@@ -794,22 +967,28 @@ function renderInfo() {
   const chips = [];
   if (ui.da || ui.a) chips.push(["date", `Periodo: ${ui.periodo !== "custom" ? PERIODI[ui.periodo].l + " · " : ""}${dIt(ui.da || DATI.dal)} – ${dIt(ui.a || DATI.al)}`]);
   if (ui.q) chips.push(["q", `Cerca: ${ui.q}`]);
+  Object.entries(ui.f).forEach(([k, v]) => v && chips.push(["g:" + k, `${GLAB[k]}: ${k === "geom" ? $("fGeom").selectedOptions[0].text : v}`]));
   Object.entries(ui.filtri[ui.vista] || {}).forEach(([k, v]) => v && COLS.includes(k) && chips.push(["f:" + k, `${COL[k].l}: ${v}`]));
-  $("info").innerHTML = `<span>${plur(VISIBILI.length, "riga", "righe")}</span>` +
-    chips.map(([id, t]) => `<span class="chip">${esc(t)}<button data-chip="${esc(id)}" aria-label="Rimuovi filtro" data-tip="Togli questo filtro">×</button></span>`).join("");
+  $("infoRow").hidden = !chips.length;
+  $("info").innerHTML = chips.map(([id, t]) => `<span class="chip">${esc(t)}<button data-chip="${esc(id)}" aria-label="Rimuovi filtro" data-tip="Togli questo filtro">×</button></span>`).join("");
+  $("footer-count").textContent = `${plur(VISIBILI.length, "riga", "righe")} · vista ${VISTE[ui.vista].l}`;
+  const n = righeBase().length, tot = DATI ? DATI.righe.length : 0;
+  $("resInfo").textContent = `${F.int.format(n)} di ${F.int.format(tot)} record (giorno · operatore · progetto · layer)`;
+  for (const [k, id] of Object.entries(GSEL)) $(id).classList.toggle("on", !!ui.f[k]);
 }
 function render(soloCorpo) {
   calcola();
   $("lLayer").hidden = ui.vista !== "dettaglio";
   if (!soloCorpo) renderHead();
   const src = renderBody();
-  renderKpi(src); renderChart(righeGrafico()); renderInfo();
-  $("bReset").disabled = !(ui.periodo !== PERIODO_DEF || ui.q || Object.values(ui.filtri[ui.vista] || {}).some(Boolean));
+  renderKpi(src); renderPills(); renderBarre(src); renderChart(righeGrafico()); renderInfo();
+  $("bReset").disabled = !(ui.periodo !== PERIODO_DEF || ui.q || Object.values(ui.f).some(Boolean) || Object.values(ui.filtri[ui.vista] || {}).some(Boolean));
 }
 function descrizioneFiltri() {
   const f = [];
   if (ui.da || ui.a) f.push(`Periodo ${dIt(ui.da || DATI.dal)} - ${dIt(ui.a || DATI.al)}`);
   if (ui.q) f.push(`Ricerca: ${ui.q}`);
+  Object.entries(ui.f).forEach(([k, v]) => v && f.push(`${GLAB[k]}: ${k === "geom" ? $("fGeom").selectedOptions[0].text : v}`));
   Object.entries(ui.filtri[ui.vista] || {}).forEach(([k, v]) => v && COLS.includes(k) && f.push(`${COL[k].l}: ${v}`));
   return f;
 }
@@ -943,13 +1122,17 @@ document.addEventListener("mouseleave", nascondiTip);
 
 /* ---------- header / dati ---------- */
 function renderSub() {
-  if (!DATI) { $("sub").textContent = "Nessun dato disponibile"; return; }
+  const badge = $("badge");
+  if (!DATI) { $("sub").textContent = "Nessun dato disponibile"; badge.textContent = "dati non disponibili"; badge.className = "version-badge old"; return; }
   const agg = new Date(DATI.aggiornato);
   const min = Math.round((Date.now() - agg) / 60000);
   const quando = min < 1 ? "adesso" : min < 60 ? `${min} min fa` : agg.toLocaleString("it-IT", {day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit"});
   const p = DATI.progetti || {};
-  $("sub").innerHTML = `Dati dal <b>${dIt(DATI.dal)}</b> al <b>${dIt(DATI.al)}</b> · aggiornati <b data-tip="Ultima sincronizzazione: ${agg.toLocaleString("it-IT")}${DATI.durata != null ? ` (durata ${Math.round(DATI.durata)} s)` : ""}">${quando}</b> · ` +
-    `<span data-tip="Progetti letti da QFieldCloud nell'ultima sincronizzazione${p.saltati ? `; ${p.saltati} saltati perché inattivi` : ""}${p.errori ? `; ${p.errori} non leggibili (vedi avvisi in fondo)` : ""}.">${p.letti ?? "?"} progetti letti</span>`;
+  badge.textContent = `aggiornati ${quando}`;
+  badge.className = "version-badge" + (min / 60 > ORE_DATI_VECCHI ? " old" : "");
+  badge.dataset.tip = `Ultima sincronizzazione da QFieldCloud: <b>${agg.toLocaleString("it-IT")}</b>${DATI.durata != null ? ` (durata ${Math.round(DATI.durata)} s)` : ""}.<div class='hint'>I dati si aggiornano da soli ogni 30 minuti nei giorni lavorativi.</div>`;
+  $("sub").innerHTML = `Rilievi Walkout QField · dati dal <b>${dIt(DATI.dal)}</b> al <b>${dIt(DATI.al)}</b> · ` +
+    `<span data-tip="Progetti letti da QFieldCloud nell'ultima sincronizzazione${p.saltati ? `; ${p.saltati} saltati perché inattivi` : ""}${p.errori ? `; ${p.errori} non leggibili (vedi avvisi in fondo)` : ""}."><b>${p.letti ?? "?"}</b> progetti letti</span>`;
 }
 function renderAvvisi() {
   const A = (DATI && DATI.avvisi) || [], el = $("avvisi");
@@ -970,14 +1153,21 @@ function impostaDati(d) {
   }
   $("fDa").min = $("fA").min = DATI.dal; $("fDa").max = $("fA").max = DATI.al;
   syncPeriodoUi();
+  for (const k of ["operatore", "progetto", "layer"]) {
+    const v = [...new Set(DATI.righe.map(r => r[k]))].sort((x, y) => x.localeCompare(y, "it", {sensitivity:"base"}));
+    if (ui.f[k] && !v.includes(ui.f[k])) ui.f[k] = "";
+    $(GSEL[k]).innerHTML = `<option value="">— Tutti —</option>` + v.map(x => `<option>${esc(x)}</option>`).join("");
+    $(GSEL[k]).value = ui.f[k];
+  }
 }
 const ORE_DATI_VECCHI = 36;  // oltre: gli aggiornamenti automatici probabilmente falliscono
 function renderBanner(err) {
   const ban = $("banner");
   const ore = DATI ? (Date.now() - new Date(DATI.aggiornato)) / 3600000 : 0;
-  if (err) { ban.className = "banner err"; ban.textContent = `Impossibile caricare i dati (${err}). Controlla la connessione e premi Ricarica.`; }
-  else if (ore > ORE_DATI_VECCHI) { ban.className = "banner err"; ban.textContent = `Dati vecchi di oltre ${Math.floor(ore)} ore: gli aggiornamenti automatici non stanno andando a buon fine. Avvisa il referente della board.`; }
-  else ban.className = "banner";
+  ban.hidden = !(err || ore > ORE_DATI_VECCHI);
+  if (err) ban.textContent = `Impossibile caricare i dati (${err}). Controlla la connessione e premi Ricarica.`;
+  else if (ore > ORE_DATI_VECCHI) ban.textContent = `Dati vecchi di oltre ${Math.floor(ore)} ore: gli aggiornamenti automatici non stanno andando a buon fine. Avvisa il referente della board.`;
+  $("report").hidden = !DATI; $("empty-state").hidden = !!DATI;
 }
 
 let primoCaricamento = true;
@@ -994,7 +1184,7 @@ async function caricaDati(manuale) {
     primoCaricamento = false;
   } catch (e) {
     renderBanner(e.message);
-    if (!DATI) { $("sub").textContent = "Dati non disponibili"; $("bXls").disabled = true; }
+    if (!DATI) { renderSub(); $("bXls").disabled = true; }
   }
 }
 
@@ -1109,16 +1299,28 @@ $("fPer").addEventListener("change", e => {
 const dataManuale = (campo, v) => { ui[campo] = v; ui.periodo = "custom"; ui.prima = null; syncPeriodoUi(); render(true); };
 $("fDa").addEventListener("change", e => dataManuale("da", e.target.value));
 $("fA").addEventListener("change", e => dataManuale("a", e.target.value));
+const filtroPannello = (k, v) => { ui.f[k] = v; $(GSEL[k]).value = v; nascondiTip(); render(true); };
+Object.entries(GSEL).forEach(([k, id]) => $(id).addEventListener("change", e => filtroPannello(k, e.target.value)));
+$("layer-pills").addEventListener("click", e => {
+  const p = e.target.closest(".layer-pill[data-layer]"); if (!p) return;
+  filtroPannello("layer", p.dataset.layer && ui.f.layer !== p.dataset.layer ? p.dataset.layer : "");
+});
+document.querySelector(".charts-grid").addEventListener("click", e => {
+  const b = e.target.closest(".bar-item[data-g]"); if (!b) return;
+  filtroPannello(b.dataset.g, ui.f[b.dataset.g] === b.dataset.v ? "" : b.dataset.v);
+});
 $("info").addEventListener("click", e => {
   const b = e.target.closest("button[data-chip]"); if (!b) return;
   const id = b.dataset.chip;
   if (id === "date") { applicaPeriodo("tutto"); syncPeriodoUi(); salvaUi(); }
   else if (id === "q") { ui.q = ""; $("q").value = ""; }
+  else if (id.startsWith("g:")) { ui.f[id.slice(2)] = ""; $(GSEL[id.slice(2)]).value = ""; }
   else if (id.startsWith("f:")) delete (ui.filtri[ui.vista] || {})[id.slice(2)];
   nascondiTip(); render();
 });
 $("bReset").addEventListener("click", () => {
   ui.q = ""; ui.filtri[ui.vista] = {}; applicaPeriodo(PERIODO_DEF);
+  for (const [k, id] of Object.entries(GSEL)) { ui.f[k] = ""; $(id).value = ""; }
   $("q").value = ""; syncPeriodoUi(); salvaUi();
   render();
 });
