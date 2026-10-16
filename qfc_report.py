@@ -6,7 +6,8 @@ Legge i "delta" (modifiche sincronizzate da QField) di tutti i progetti
 visibili all'utente configurato e calcola, per giorno / operatore / progetto / layer:
   - km netti di linee   = nuove + allungamenti - accorciamenti - cancellazioni
   - km nuovi            = solo linee create (lordo)
-  - feature create / modificate / cancellate
+  - feature create / modificate / cancellate, e quanti dei creati sono punti
+  - tipo di geometria di ogni layer (punto, linea, poligono)
   - foto scattate, orario della prima (inizio) e dell'ultima (fine) foto della giornata
 (calcola internamente anche m2 di poligoni e delta in errore, oggi non mostrati)
 
@@ -69,7 +70,8 @@ STATI_PROBLEMA = {"conflict", "not_applied", "error", "unpermitted"}
 KM_MAX_FEATURE = 50      # una feature più lunga è quasi certamente un errore di CRS
 MARGINE_INATTIVI = 30    # giorni: progetti fermi da prima di (dal - margine) vengono saltati
 WORKERS = 6              # download in parallelo
-METRICHE = ("km_netti", "km_nuovi", "mq_netti", "create", "modificate", "cancellate", "problemi", "foto")
+METRICHE = ("km_netti", "km_nuovi", "mq_netti", "create", "punti", "modificate", "cancellate", "problemi", "foto")
+TIPI = {"punto": "Punto", "linea": "Linea", "poligono": "Poligono", "": "n.d."}  # geometria del layer
 RE_FOTO = re.compile(r"\.(jpe?g|png|heic|heif|webp)$", re.I)
 # data e ora nel nome del file: JPEG_20261015083012345.jpg, IMG_20261015_083012.jpg, 2026-10-15_08-30-12.jpg
 RE_ORA_FOTO = re.compile(r"(20\d\d)[-_]?(\d\d)[-_]?(\d\d)[-_T ]?(\d\d)[-_.:]?(\d\d)[-_.:]?(\d\d)")
@@ -186,6 +188,21 @@ def misura(geom_wkt):
     return 0.0, 0.0, False
 
 
+def tipo_geom(geom_wkt):
+    """'punto' | 'linea' | 'poligono' dalla prima parola del WKT, None se manca o non si riconosce."""
+    m = re.match(r"\s*([A-Za-z]+)", geom_wkt or "")
+    if not m:
+        return None
+    t = m.group(1).upper()
+    if "POINT" in t:
+        return "punto"
+    if "POLYGON" in t or "SURFACE" in t:
+        return "poligono"
+    if "LINE" in t or "CURVE" in t:
+        return "linea"
+    return None
+
+
 def foto_delta(c):
     """Percorsi delle foto allegate al delta (file inviati e attributi che puntano a un'immagine)."""
     new = c.get("new") or {}
@@ -237,7 +254,7 @@ def elabora(client, dal: date, al: date, filtro_progetti=None, tutti=False,
             log=print, avanzamento=None):
     """
     Ritorna un dict:
-      righe     lista di dict (giorno, operatore, progetto, layer + METRICHE + inizio/fine "HH:MM")
+      righe     lista di dict (giorno, operatore, progetto, layer, geom + METRICHE + inizio/fine "HH:MM")
       avvisi    lista di stringhe
       progetti  {"letti": n, "saltati": n, "errori": n}
     """
@@ -256,6 +273,7 @@ def elabora(client, dal: date, al: date, filtro_progetti=None, tutti=False,
     avvisi, visti, errori = [], set(), 0
     scartate = defaultdict(int)
     orari = {}                         # chiave -> [prima, ultima] foto
+    geom_layer = {}                    # (progetto, layer) -> punto | linea | poligono
     foto_viste = set()                 # (progetto, nome file): ogni foto conta una volta sola
     foto_senza_ora = defaultdict(list)
     if avanzamento:
@@ -282,6 +300,15 @@ def elabora(client, dal: date, al: date, filtro_progetti=None, tutti=False,
                     if did in visti:
                         continue
                     visti.add(did)
+                c = d.get("content") or {}
+                layer = c.get("sourceLayerId") or c.get("localLayerId") or "?"
+                g_new = (c.get("new") or {}).get("geometry")
+                g_old = (c.get("old") or {}).get("geometry")
+                # tipo di geometria del layer: da qualsiasi delta, anche fuori periodo
+                if (nome, layer) not in geom_layer:
+                    tg = tipo_geom(g_new) or tipo_geom(g_old)
+                    if tg:
+                        geom_layer[(nome, layer)] = tg
                 quando = ts(d.get("created_at"))
                 if not quando:
                     continue
@@ -289,9 +316,7 @@ def elabora(client, dal: date, al: date, filtro_progetti=None, tutti=False,
                 if not (dal <= giorno <= al):
                     continue
                 stato = (d.get("last_status") or d.get("status") or "").lower()
-                c = d.get("content") or {}
                 metodo = (c.get("method") or "").lower()
-                layer = c.get("sourceLayerId") or c.get("localLayerId") or "?"
                 op = d.get("created_by") or "?"
                 a = agg[(giorno, op, nome, layer)]
                 # foto: vanno nel giorno di scatto, a prescindere dallo stato del delta
@@ -313,14 +338,13 @@ def elabora(client, dal: date, al: date, filtro_progetti=None, tutti=False,
                     a["problemi"] += 1
                 if stato not in STATI_VALIDI:
                     continue
-                g_new = (c.get("new") or {}).get("geometry")
-                g_old = (c.get("old") or {}).get("geometry")
                 if metodo == "create":
                     km, mq, sc = misura(g_new)
                     a["km_netti"] += km
                     a["km_nuovi"] += km
                     a["mq_netti"] += mq
                     a["create"] += 1
+                    a["punti"] += tipo_geom(g_new) == "punto"
                     scartate[nome] += sc
                 elif metodo == "patch":
                     a["modificate"] += 1
@@ -358,8 +382,9 @@ def elabora(client, dal: date, al: date, filtro_progetti=None, tutti=False,
         g, op, pr, ly = k
         o = orari.get(k)
         righe.append(dict(giorno=g.isoformat(), operatore=op, progetto=pr, layer=ly,
+                          geom=geom_layer.get((pr, ly), ""),
                           km_netti=round(v["km_netti"], 4), km_nuovi=round(v["km_nuovi"], 4),
-                          mq_netti=round(v["mq_netti"], 1), create=v["create"],
+                          mq_netti=round(v["mq_netti"], 1), create=v["create"], punti=v["punti"],
                           modificate=v["modificate"], cancellate=v["cancellate"], problemi=v["problemi"],
                           foto=v["foto"], inizio=o and f"{o[0]:%H:%M}", fine=o and f"{o[1]:%H:%M}"))
     righe.sort(key=lambda r: (r["giorno"], r["operatore"], r["progetto"], r["layer"]), reverse=True)
@@ -464,8 +489,9 @@ C_GIORNO = ("giorno", "Giorno", "data")
 C_OP = ("operatore", "Operatore", "testo")
 C_PR = ("progetto", "Progetto", "testo")
 C_LY = ("layer", "Layer", "testo")
-C_MET = [("km_netti", "Km netti", "km"), ("km_nuovi", "Km nuovi", "km"),
-         ("create", "Create", "int"), ("modificate", "Modificate", "int"), ("cancellate", "Cancellate", "int")]
+C_TIPO = ("tipo", "Tipo", "testo")
+C_MET = [("km_netti", "Km netti", "km"), ("km_nuovi", "Km nuovi", "km"), ("create", "Create", "int"),
+         ("punti", "di cui punti", "int"), ("modificate", "Modificate", "int"), ("cancellate", "Cancellate", "int")]
 C_GG = [("giorni_attivi", "Giorni attivi", "int"), ("km_al_giorno", "Km/giorno", "dec")]
 C_ORARI = [("inizio", "Inizio (1a foto)", "ora"), ("fine", "Fine (ultima foto)", "ora"), ("ore", "Ore lavoro", "ore")]
 C_FOTO = [("foto", "Foto", "int")]
@@ -481,16 +507,20 @@ def scrivi_excel(ris, dal, al, out):
            sorted(raggruppa(righe, ["giorno", "operatore"]), key=lambda r: (r["giorno"], r["operatore"])))
     foglio(wb, "Progetto x operatore", [C_PR, C_OP] + C_MET + C_FOTO + C_GG,
            sorted(raggruppa(righe, ["progetto", "operatore"]), key=lambda r: (r["progetto"], -r["km_netti"])))
-    foglio(wb, "Progetto x layer", [C_PR, C_LY] + C_MET + C_FOTO,
-           sorted(raggruppa(righe, ["progetto", "layer"]), key=lambda r: (r["progetto"], -r["km_netti"])))
-    foglio(wb, "Dettaglio", [C_GIORNO, C_OP, C_PR, C_LY] + C_ORARI + C_MET + C_FOTO,
-           sorted((dict(r, ore=ore_lavoro(r)) for r in righe),
+    foglio(wb, "Progetto x layer", [C_PR, C_LY, C_TIPO] + C_MET + C_FOTO,
+           sorted((dict(r, tipo=TIPI[r["geom"]]) for r in raggruppa(righe, ["progetto", "layer", "geom"])),
+                  key=lambda r: (r["progetto"], -r["km_netti"])))
+    foglio(wb, "Dettaglio", [C_GIORNO, C_OP, C_PR, C_LY, C_TIPO] + C_ORARI + C_MET + C_FOTO,
+           sorted((dict(r, ore=ore_lavoro(r), tipo=TIPI[r["geom"]]) for r in righe),
                   key=lambda r: (r["giorno"], r["operatore"], r["progetto"], r["layer"])))
     foglio_info(wb, [
         ("Periodo", f"{dal:%d/%m/%Y} - {al:%d/%m/%Y} (giorno di sincronizzazione, ora italiana)"),
         ("Generato il", f"{adesso():%d/%m/%Y %H:%M}"),
         ("Km netti", "linee nuove + allungamenti - accorciamenti - cancellazioni"),
         ("Km nuovi", "solo linee create nel periodo (lordo)"),
+        ("di cui punti", "elementi puntuali creati (es. nodi, pali, pozzetti, note), già compresi in Create"),
+        ("Tipo", "geometria del layer (punto, linea, poligono); n.d. = tabella senza geometria o nessuna "
+                 "geometria nei dati"),
         ("Inizio / Fine", "orario della prima e dell'ultima foto della giornata, letto dal nome del file "
                           "(orologio del dispositivo); foto, inizio e fine sono nel giorno di SCATTO"),
         ("Ore lavoro", "Fine - Inizio: tempo tra la prima e l'ultima foto della giornata (pause comprese)"),

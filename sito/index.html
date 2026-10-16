@@ -14,6 +14,7 @@
   --bar:#cfe0fb; --neg:#c0262d; --warn-bg:#fff4e0; --warn:#9a5b00;
   --head:#f8f9fb; --zebra:#fafbfc; --hover:#f1f6ff; --grp:#eaf1fd;
   --tip-bg:#1f2937; --tip-ink:#f9fafb;
+  --g-punto:#d9480f; --g-linea:#1f6feb; --g-poli:#2b8a3e;
   --shadow: 0 1px 2px rgba(16,24,40,.06), 0 1px 3px rgba(16,24,40,.08);
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
@@ -24,9 +25,11 @@
   --bar:#24426e; --neg:#ff7b7b; --warn-bg:#3a2a10; --warn:#f3c26b;
   --head:#1c2027; --zebra:#191c22; --hover:#1d2533; --grp:#1a2538;
   --tip-bg:#e5e7eb; --tip-ink:#111827;
+  --g-punto:#ff8a4c; --g-linea:#4a8cf7; --g-poli:#51cf66;
   --shadow: none;
 } }
 * { box-sizing: border-box }
+[hidden] { display:none !important }
 body { margin:0; background:var(--bg); color:var(--ink);
   font:14px/1.45 "Segoe UI", system-ui, -apple-system, Roboto, sans-serif }
 main { max-width:1280px; margin:0 auto; padding:20px 16px 48px }
@@ -140,6 +143,20 @@ tr.grp .gd { font-size:14px }
 tr.grp .gs { color:var(--ink2); font-weight:500; margin-left:8px; font-size:12.5px }
 tbody tr.grp + tr td { padding-top:9px }
 td.gday { color:transparent }
+/* layer: icona del tipo di geometria e righe espandibili del Dettaglio */
+.geo { display:inline-block; width:10px; height:10px; margin-right:7px; vertical-align:-1px; flex:none }
+.geo.punto { border-radius:50%; background:var(--g-punto) }
+.geo.linea { width:13px; height:3px; vertical-align:2px; border-radius:2px; background:var(--g-linea) }
+.geo.poligono { border-radius:2px; background:var(--g-poli); opacity:.8 }
+.geo.nd { border:1.5px dashed var(--muted); border-radius:2px }
+tbody tr.det { cursor:pointer }
+.car { display:inline-block; width:14px; margin-left:-4px; color:var(--ink2); transition:transform .15s }
+tr.open .car { transform:rotate(90deg) }
+tbody tr.sub td { background-color:var(--zebra) !important; font-size:12.5px; color:var(--ink2); padding-top:4px; padding-bottom:4px; cursor:pointer }
+tbody tr.sub:hover td { background-color:var(--hover) !important }
+tr.sub td.ly { padding-left:30px; color:var(--ink) }
+tr.sub .lt { color:var(--muted); margin-left:6px }
+tr.sub + tr:not(.sub) td { border-top:1px solid var(--border) }
 tfoot td { position:sticky; bottom:0; background-color:var(--head); font-weight:700; border-top:1px solid var(--border); border-bottom:0 }
 .vuoto { padding:40px; color:var(--muted); text-align:center }
 details.avvisi { margin-top:12px; color:var(--ink2); font-size:13px }
@@ -224,6 +241,7 @@ dialog.guida::backdrop { background:rgba(10,14,20,.5) }
         data-tip="Cerca in operatore, progetto e layer insieme. Più parole separate da virgola = una qualsiasi (es. <code>rperri, FGN</code>). Con <code>!</code> escludi (es. <code>!test</code>).">
     </div>
     <div class="info"><span id="info" class="chips"></span><span class="spacer"></span>
+      <label class="chk" id="lLayer" hidden data-tip="Apre tutte le righe e mostra, sotto ognuna, il lavoro diviso per <b>layer</b> (punti, linee, poligoni).<div class='hint'>Puoi anche aprire o chiudere una sola riga con un clic.</div>"><input type="checkbox" id="cLayer"> Mostra layer</label>
       <button class="btn" id="bReset" data-tip="Toglie periodo, ricerca e filtri di colonna della vista corrente">Azzera filtri</button>
       <button class="btn" id="bXls" data-tip="Scarica in Excel <b>esattamente</b> la tabella a schermo: stessa vista, stessi filtri, stesso ordinamento. Nel foglio <i>Info</i> trovi i filtri applicati.">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
@@ -241,6 +259,7 @@ dialog.guida::backdrop { background:rgba(10,14,20,.5) }
   <details class="avvisi" id="avvisi" hidden><summary></summary><ul></ul></details>
   <p class="note">
     <b>Km netti</b> = linee nuove + allungamenti − accorciamenti − cancellazioni · <b>Km nuovi</b> = solo linee create ·
+    <b>di cui punti</b> = elementi puntuali creati (nodi, pali, pozzetti, note) ·
     <b>Inizio / Fine</b> = prima e ultima foto della giornata ·
     i giorni sono quelli di <b>sincronizzazione</b> (ora italiana), per le foto quelli di scatto. Passa il mouse su colonne e celle per i dettagli,
     oppure apri la <button class="linkbtn" id="bGuida2">Guida</button>.
@@ -288,6 +307,8 @@ da un giorno molto alto spesso vuol dire proprio questo. Gli orari sono in ora i
     <tr><td><b>Km netti</b></td><td>Quanta rete è stata <b>effettivamente aggiunta</b>: linee nuove + allungamenti − accorciamenti − linee cancellate. È il dato di produzione principale.</td></tr>
     <tr><td><b>Km nuovi</b></td><td>Lunghezza delle sole <b>linee create</b>: la produzione "lorda", senza tener conto di modifiche e cancellazioni.</td></tr>
     <tr><td><b>Create</b></td><td>Quanti elementi sono stati creati: linee, punti (es. pozzetti, pali) e poligoni.</td></tr>
+    <tr><td><b>di cui punti</b></td><td>Quanti degli elementi creati sono <b>puntuali</b> (nodi, pali, pozzetti, note…): sono già compresi in Create. Passa il mouse sul numero per vederli divisi per layer.</td></tr>
+    <tr><td><b>Tipo</b></td><td>Nelle viste per layer: la geometria del layer, <span class="geo punto"></span>punto, <span class="geo linea"></span>linea o <span class="geo poligono"></span>poligono. <b>n.d.</b> = tabella senza geometria (es. elenco delle tipologie) o layer di cui nei dati ci sono solo modifiche agli attributi.</td></tr>
     <tr><td><b>Modificate</b></td><td>Quante modifiche sono state sincronizzate, sia alla geometria sia agli attributi. Lo stesso elemento modificato 3 volte conta 3.</td></tr>
     <tr><td><b>Cancellate</b></td><td>Quanti elementi sono stati cancellati.</td></tr>
     <tr><td><b>Inizio</b></td><td>Orario della <b>prima foto</b> scattata nella giornata: indica quando è iniziata l'attività in campo. Solo nelle viste con una riga per giorno (Dettaglio e Per giorno).</td></tr>
@@ -335,11 +356,13 @@ la ricerca e i filtri su operatore, progetto e layer.</p>
 <table>
   <thead><tr><th>Vista</th><th>Una riga per…</th><th>Utile per</th></tr></thead>
   <tbody>
-    <tr><td><b>Dettaglio</b></td><td>giorno + operatore + progetto</td><td>vedere chi ha fatto cosa ogni giorno e a che ora ha iniziato e finito. Quando è ordinata per giorno, i giorni sono separati da una riga blu con i totali della giornata.</td></tr>
+    <tr><td><b>Dettaglio</b></td><td>giorno + operatore + progetto</td><td>vedere chi ha fatto cosa ogni giorno e a che ora ha iniziato e finito. Quando è ordinata per giorno, i giorni sono separati da una riga blu con i totali della giornata.
+      <b>Clic su una riga</b> per aprirla e vedere il lavoro diviso per layer, con nome e tipo (punto, linea, poligono); <b>Mostra layer</b> le apre tutte.</td></tr>
     <tr><td><b>Per operatore</b></td><td>operatore</td><td>confrontare la resa: totale km, giorni attivi, km al giorno.</td></tr>
     <tr><td><b>Per progetto</b></td><td>progetto</td><td>vedere l'avanzamento di ogni cantiere.</td></tr>
     <tr><td><b>Per giorno</b></td><td>giorno</td><td>l'andamento quotidiano della squadra.</td></tr>
-    <tr><td><b>Per layer</b></td><td>progetto + layer</td><td>capire su quali strati si lavora (es. condotte, pozzetti). Il nome del layer è quello interno di QGIS.</td></tr>
+    <tr><td><b>Per layer</b></td><td>layer (tutti i progetti insieme)</td><td>il prospetto dei layer: quanti punti, linee e km per ogni strato (es. tutti i <code>ND_ELE</code> dei vari comuni sommati).</td></tr>
+    <tr><td><b>Progetto × layer</b></td><td>progetto + layer</td><td>capire su quali strati si lavora in ogni cantiere (es. condotte, pozzetti).</td></tr>
   </tbody>
 </table>
 <p>L'ultima vista scelta e il suo ordinamento vengono ricordati alla prossima apertura.</p>
@@ -382,6 +405,7 @@ il secondo inverte. La freccia blu indica la colonna usata.</p>
 <h3 id="g-excel">7. Esportare in Excel</h3>
 <ul>
   <li><b>Esporta Excel</b> scarica esattamente la tabella a schermo: stessa vista, stessi filtri, stesso ordinamento.</li>
+  <li>Dalla vista <b>Dettaglio</b> il file contiene anche il foglio <b>Dettaglio per layer</b>, con le stesse righe divise per layer (aperte o chiuse che siano a schermo).</li>
   <li>Il file ha i filtri di Excel già attivi e una riga <b>Totale</b> che si ricalcola se filtri anche dentro Excel.</li>
   <li>Il foglio <b>Info</b> riporta vista, data di esportazione, data di aggiornamento dei dati e filtri applicati.</li>
   <li>Il file finisce nella cartella <i>Download</i> del browser con un nome del tipo <code>produzione_operatore_2026-10-13.xlsx</code>.</li>
@@ -393,6 +417,7 @@ il secondo inverte. La freccia blu indica la colonna usata.</p>
   <li><b>Lavoro non ancora applicato</b>: le modifiche sincronizzate ma rimaste in conflitto o non applicate sul server vengono comunque contate, perché l'operatore le ha fatte. Se un numero non torna con quello che vedi in QGIS, controlla lo stato delle modifiche in QFieldCloud.</li>
   <li><b>Progetti saltati</b>: se la board ha saltato progetti inattivi lo trovi scritto negli avvisi.</li>
   <li><b>Nomi dei layer</b>: sono mostrati senza il codice tecnico finale che QGIS aggiunge (es. <code>TR_ELE_UNITO_ab68…</code> diventa <code>TR_ELE_UNITO</code>). Passa il mouse sul nome per vedere quello completo.</li>
+  <li><b>Tipo di layer</b>: è ricavato dalle geometrie sincronizzate negli ultimi 12 mesi. Un layer su cui sono stati modificati solo gli attributi, senza mai creare o spostare elementi, risulta <b>n.d.</b></li>
   <li><b>Righe mostrate</b>: per velocità la tabella mostra al massimo 3.000 righe; l'export Excel le contiene sempre tutte.</li>
   <li>Il nome mostrato per l'operatore è il suo <b>utente QFieldCloud</b>.</li>
 </ul>
@@ -442,9 +467,11 @@ const COL = {
   operatore:    {l:"Operatore",     t:"testo", d:"Utente QFieldCloud che ha sincronizzato le modifiche."},
   progetto:     {l:"Progetto",      t:"testo", d:"Progetto QFieldCloud in cui sono state fatte le modifiche."},
   layer:        {l:"Layer",         t:"testo", d:"Strato del progetto (nome interno di QGIS) in cui sono state fatte le modifiche."},
+  tipo:         {l:"Tipo",          t:"testo", d:"Geometria del layer: <span class='geo punto'></span>punto, <span class='geo linea'></span>linea o <span class='geo poligono'></span>poligono. <b>n.d.</b> = tabella senza geometria o layer con sole modifiche agli attributi."},
   km_netti:     {l:"Km netti",      t:"km", bar:true, d:"Rete <b>effettivamente aggiunta</b>: linee nuove + allungamenti − accorciamenti − linee cancellate. È il dato di produzione principale; in rosso se negativo."},
   km_nuovi:     {l:"Km nuovi",      t:"km",    d:"Lunghezza delle sole <b>linee create</b> (produzione lorda), senza contare modifiche e cancellazioni."},
   create:       {l:"Create",        t:"int",   d:"Elementi creati: linee, punti e poligoni."},
+  punti:        {l:"di cui punti",  t:"int",   d:"Elementi <b>puntuali</b> creati (nodi, pali, pozzetti, note…), già compresi in Create. Passa il mouse sul numero per vederli divisi per layer."},
   modificate:   {l:"Modificate",    t:"int",   d:"Modifiche sincronizzate, alla geometria o agli attributi. Lo stesso elemento modificato 3 volte conta 3."},
   cancellate:   {l:"Cancellate",    t:"int",   d:"Elementi cancellati."},
   giorni_attivi:{l:"Giorni attivi", t:"int",   d:"Giorni diversi con almeno una sincronizzazione."},
@@ -452,21 +479,28 @@ const COL = {
   n_operatori:  {l:"Operatori",     t:"int",   d:"Quanti operatori diversi hanno lavorato. Passa il mouse sul numero per i nomi."},
   n_progetti:   {l:"Progetti",      t:"int",   d:"Su quanti progetti diversi si è lavorato. Passa il mouse sul numero per i nomi."},
 };
-const MET = ["km_netti","km_nuovi","create","modificate","cancellate"];
+const MET = ["km_netti","km_nuovi","create","punti","modificate","cancellate"];
 const VISTE = {
   dettaglio: {l:"Dettaglio",     key:["giorno","operatore","progetto"], extra:["foto"], sort:[["giorno",-1],["km_netti",-1]],
-              d:"Una riga per giorno + operatore + progetto, con orario di inizio e fine (prima e ultima foto). Ordinata per giorno, mostra un separatore con i totali di ogni giornata."},
+              d:"Una riga per giorno + operatore + progetto, con orario di inizio e fine (prima e ultima foto). Ordinata per giorno, mostra un separatore con i totali di ogni giornata. Clic su una riga per vederla divisa per layer."},
   operatore: {l:"Per operatore", key:["operatore"], extra:["foto","giorni_attivi","km_al_giorno","n_progetti"], sort:[["km_netti",-1]],
               d:"Una riga per operatore: totale del periodo, giorni attivi e resa media al giorno."},
   progetto:  {l:"Per progetto",  key:["progetto"],  extra:["foto","giorni_attivi","n_operatori"], sort:[["km_netti",-1]],
               d:"Una riga per progetto: avanzamento di ogni cantiere nel periodo."},
   giorno:    {l:"Per giorno",    key:["giorno"],    extra:["foto","n_operatori","n_progetti"], sort:[["giorno",-1]],
               d:"Una riga per giorno: andamento quotidiano di tutta la squadra, con la prima e l'ultima foto della giornata."},
-  layer:     {l:"Per layer",     key:["progetto","layer"], extra:["foto","n_operatori"], sort:[["progetto",1],["km_netti",-1]],
-              d:"Una riga per progetto + layer: su quali strati si lavora."},
+  strato:    {l:"Per layer",     key:["layer"], extra:["foto","n_progetti","n_operatori"], sort:[["create",-1]],
+              d:"Prospetto dei layer: una riga per layer, sommando tutti i progetti. Mostra il tipo (punto, linea, poligono) e quanti elementi sono stati creati."},
+  layer:     {l:"Progetto × layer", key:["progetto","layer"], extra:["foto","n_operatori"], sort:[["progetto",1],["km_netti",-1]],
+              d:"Una riga per progetto + layer: su quali strati si lavora in ogni cantiere."},
 };
+// tipo di geometria del layer (campo geom dei dati)
+const GEO = {punto:{l:"Punto", o:1}, linea:{l:"Linea", o:0}, poligono:{l:"Poligono", o:2}, "":{l:"n.d.", o:3}};
+const geoIco = g => `<span class="geo ${g || "nd"}"></span>`;
+const geoL = g => (GEO[g] || GEO[""]).l;
 // inizio/fine/ore hanno senso solo nelle viste con una riga per giorno
-const colonne = v => [...VISTE[v].key, ...(VISTE[v].key.includes("giorno") ? ["inizio","fine","ore"] : []), ...MET, ...VISTE[v].extra];
+const colonne = v => [...VISTE[v].key, ...(VISTE[v].key.includes("layer") ? ["tipo"] : []),
+  ...(VISTE[v].key.includes("giorno") ? ["inizio","fine","ore"] : []), ...MET, ...VISTE[v].extra];
 const isNum = k => !["testo","data","ora"].includes(COL[k].t);
 const aDestra = k => isNum(k) || COL[k].t === "ora";
 // la riga contiene lavoro sincronizzato (non solo foto scattate quel giorno e sincronizzate dopo)
@@ -493,12 +527,12 @@ const PERIODI = {
   "custom":{l:"Personalizzato"},
 };
 const PERIODO_DEF = "60";
-let ui = {vista:"dettaglio", sort:{}, filtri:{}, q:"", da:"", a:"", periodo:PERIODO_DEF, prima:null};
-try { const s = JSON.parse(localStorage.getItem("board_ui") || "{}"); ui.vista = s.vista || ui.vista; ui.sort = s.sort || {}; ui.periodo = s.periodo || ui.periodo; } catch(e) {}
+let ui = {vista:"dettaglio", sort:{}, filtri:{}, q:"", da:"", a:"", periodo:PERIODO_DEF, prima:null, layer:false};
+try { const s = JSON.parse(localStorage.getItem("board_ui") || "{}"); ui.vista = s.vista || ui.vista; ui.sort = s.sort || {}; ui.periodo = s.periodo || ui.periodo; ui.layer = !!s.layer; } catch(e) {}
 if (!VISTE[ui.vista]) ui.vista = "dettaglio";
 if (!PERIODI[ui.periodo] || ui.periodo === "custom") ui.periodo = PERIODO_DEF;
 for (const v in ui.sort) ui.sort[v] = (ui.sort[v] || []).filter(s => COL[s[0]]);
-const salvaUi = () => { try { localStorage.setItem("board_ui", JSON.stringify({vista:ui.vista, sort:ui.sort, periodo:ui.periodo === "custom" ? undefined : ui.periodo})); } catch(e) {} };
+const salvaUi = () => { try { localStorage.setItem("board_ui", JSON.stringify({vista:ui.vista, sort:ui.sort, periodo:ui.periodo === "custom" ? undefined : ui.periodo, layer:ui.layer})); } catch(e) {} };
 function applicaPeriodo(k) {
   ui.periodo = k; ui.prima = null;
   if (PERIODI[k].f && DATI) {
@@ -549,8 +583,8 @@ function aggrega(R, vista) {
   for (const r of R) {
     const k = V.key.map(c => r[c]).join("\u0001");
     let a = acc.get(k);
-    if (!a) { a = {_src:[], _g:new Set(), _o:new Set(), _p:new Set(), _l:new Set(), foto:0, inizio:"", fine:""}; V.key.forEach(c => a[c] = r[c]); MET.forEach(m => a[m] = 0); acc.set(k, a); }
-    MET.forEach(m => a[m] += r[m]);
+    if (!a) { a = {_src:[], _g:new Set(), _o:new Set(), _p:new Set(), _l:new Set(), foto:0, inizio:"", fine:"", geom:""}; V.key.forEach(c => a[c] = r[c]); MET.forEach(m => a[m] = 0); acc.set(k, a); }
+    MET.forEach(m => a[m] += r[m]); a.geom ||= r.geom;
     a.foto += r.foto; a.inizio = minOra(a.inizio, r.inizio); a.fine = maxOra(a.fine, r.fine);
     a._src.push(r); if (sincr(r)) a._g.add(r.giorno); a._o.add(r.operatore); a._p.add(r.progetto); a._l.add(r.layer);
   }
@@ -558,8 +592,27 @@ function aggrega(R, vista) {
     a.giorni_attivi = a._g.size; a.n_operatori = a._o.size; a.n_progetti = a._p.size;
     a.km_al_giorno = a.giorni_attivi ? a.km_netti / a.giorni_attivi : 0;
     a.ore = a.inizio ? (minuti(a.fine) - minuti(a.inizio)) / 60 : null;  // null = nessuna foto
+    a.tipo = geoL(a.geom);
   }
   return [...acc.values()];
+}
+// righe di un aggregato divise per layer (sottorighe del Dettaglio, foglio Excel per layer)
+function perLayer(src) {
+  const acc = new Map();
+  for (const r of src) {
+    let a = acc.get(r.layer);
+    if (!a) { a = {layer:r.layer, geom:"", foto:0, _src:[], _ids:new Set(), _o:new Set(), _p:new Set(), _g:new Set()}; MET.forEach(m => a[m] = 0); acc.set(r.layer, a); }
+    MET.forEach(m => a[m] += r[m]); a.foto += r.foto; a.geom ||= r.geom;
+    a._src.push(r); a._ids.add(r.layer_id); a._o.add(r.operatore); a._p.add(r.progetto); if (sincr(r)) a._g.add(r.giorno);
+  }
+  for (const a of acc.values()) a.tipo = geoL(a.geom);
+  return [...acc.values()].sort((x, y) => (GEO[x.geom] || GEO[""]).o - (GEO[y.geom] || GEO[""]).o || x.layer.localeCompare(y.layer, "it"));
+}
+// "ND_ELE 12 · NOTE_ELE 3": una metrica divisa per layer (per i tooltip)
+function elencoLayer(src, m, max = 8) {
+  const L = perLayer(src || []).filter(a => a[m]).sort((x, y) => y[m] - x[m]);
+  if (!L.length) return "";
+  return L.slice(0, max).map(a => `${geoIco(a.geom)}${esc(a.layer)} <b>${F.int.format(a[m])}</b>`).join("<br>") + (L.length > max ? `<br>e altri ${L.length - max} layer` : "");
 }
 function filtraColonne(rows, cols) {
   const fv = ui.filtri[ui.vista] || {};
@@ -622,7 +675,23 @@ function cella(r, k, i, maxKm, nascondiGiorno) {
   if (nascondiGiorno && k === "giorno") cls += " gday";
   let html = fmt(k, v);
   if (COL[k].bar) html = `<span class="kb"><i style="width:${(Math.max(0, v) / maxKm * 100).toFixed(1)}%"></i></span>${html}`;
+  if (k === "tipo") html = geoIco(r.geom) + html;
+  if (k === "giorno" && ui.vista === "dettaglio") html = `<span class="car" aria-hidden="true">▸</span>` + html;
   return `<td class="${cls}" data-k="${k}">${html}</td>`;
+}
+// righe del Dettaglio aperte: tutte con "Mostra layer", altrimenti quelle cliccate (il clic inverte)
+const invertite = new Set();
+const chiaveDet = r => `${r.giorno}|${r.operatore}|${r.progetto}`;
+const aperta = r => ui.vista === "dettaglio" && ui.layer !== invertite.has(chiaveDet(r));
+let SUBS = {};
+function sottoRighe(r, i) {
+  const nk = VISTE[ui.vista].key.length;
+  return perLayer(r._src).map((s, j) => {
+    SUBS[`${i}:${j}`] = s;
+    return `<tr class="sub" data-s="${i}:${j}"><td colspan="${nk}" class="ly" data-k="_layer">${geoIco(s.geom)}${esc(s.layer)}<span class="lt">${s.tipo}</span></td>` +
+      COLS.slice(nk).map(k => !(k in s) ? "<td></td>" :
+        `<td class="num${s[k] < -0.0005 ? " neg" : Math.abs(s[k]) < 0.0005 && k !== "km_netti" ? " dim" : ""}" data-k="${k}">${fmt(k, s[k])}</td>`).join("") + "</tr>";
+  }).join("");
 }
 function renderBody() {
   const maxKm = Math.max(0.0001, ...VISIBILI.map(r => Math.abs(r.km_netti)));
@@ -630,12 +699,13 @@ function renderBody() {
   // totali per giorno (su tutte le righe visibili, non solo le prime LIMITE)
   GRUPPI = {};
   if (grp) for (const r of VISIBILI) {
-    const g = GRUPPI[r.giorno] ||= {n:0, o:new Set(), p:new Set(), foto:0, inizio:"", fine:"", ore:null, ...Object.fromEntries(MET.map(m => [m, 0]))};
-    g.n++; g.o.add(r.operatore); g.p.add(r.progetto); MET.forEach(m => g[m] += r[m]);
+    const g = GRUPPI[r.giorno] ||= {n:0, o:new Set(), p:new Set(), foto:0, inizio:"", fine:"", ore:null, _src:[], ...Object.fromEntries(MET.map(m => [m, 0]))};
+    g.n++; g.o.add(r.operatore); g.p.add(r.progetto); MET.forEach(m => g[m] += r[m]); g._src.push(...r._src);
     g.foto += r.foto; g.inizio = minOra(g.inizio, r.inizio); g.fine = maxOra(g.fine, r.fine);
     if (r.ore != null) g.ore = (g.ore || 0) + r.ore;
   }
-  let out = "", ultimo = null;
+  let out = "", ultimo = null, sub = false;
+  SUBS = {};
   R.forEach((r, i) => {
     if (grp && r.giorno !== ultimo) {
       ultimo = r.giorno;
@@ -644,15 +714,17 @@ function renderBody() {
         `<span class="gs">${plur(g.o.size, "operatore", "operatori")} · ${plur(g.p.size, "progetto", "progetti")}</span></td>` +
         COLS.slice(nk).map(k => `<td class="num${g[k] < -0.0005 ? " neg" : ""}" data-k="${k}">${k in g ? fmt(k, g[k]) : ""}</td>`).join("") + "</tr>";
     }
-    out += `<tr data-i="${i}">` + COLS.map(k => cella(r, k, i, maxKm, grp)).join("") + "</tr>";
+    const ap = aperta(r);
+    out += `<tr data-i="${i}"${ui.vista === "dettaglio" ? ` class="det${ap ? " open" : ""}" aria-expanded="${ap}"` : ""}>` + COLS.map(k => cella(r, k, i, maxKm, grp)).join("") + "</tr>";
+    if (ap) { out += sottoRighe(r, i); sub = true; }
   });
   if (VISIBILI.length > LIMITE) out += `<tr><td colspan="${COLS.length}" class="vuoto">Mostrate le prime ${LIMITE} righe su ${VISIBILI.length}: l'export Excel le contiene tutte.</td></tr>`;
   const tb = $("tb");
-  tb.classList.toggle("grouped", grp);
+  tb.classList.toggle("grouped", grp || sub);
   tb.innerHTML = out || `<tr><td colspan="${COLS.length}" class="vuoto">${DATI ? "Nessun dato per questi filtri" : "Nessun dato disponibile"}</td></tr>`;
   // totali
   const src = VISIBILI.flatMap(r => r._src);
-  TOT = {_n: VISIBILI.length, _g:new Set(src.filter(sincr).map(r => r.giorno)), _o:new Set(src.map(r => r.operatore)), _p:new Set(src.map(r => r.progetto))};
+  TOT = {_n: VISIBILI.length, _src: src, _g:new Set(src.filter(sincr).map(r => r.giorno)), _o:new Set(src.map(r => r.operatore)), _p:new Set(src.map(r => r.progetto))};
   MET.forEach(m => TOT[m] = VISIBILI.reduce((s, r) => s + r[m], 0));
   TOT.foto = VISIBILI.reduce((s, r) => s + r.foto, 0);
   TOT.inizio = VISIBILI.reduce((s, r) => minOra(s, r.inizio), ""); TOT.fine = VISIBILI.reduce((s, r) => maxOra(s, r.fine), "");
@@ -674,7 +746,8 @@ function renderKpi(src) {
     ["Km netti", F.km.format(kn), "km", `<b>Km netti</b>: ${COL.km_netti.d}${nota}`],
     ["Km nuovi", F.km.format(kv), "km", `<b>Km nuovi</b>: ${COL.km_nuovi.d}` +
       (kv > 0 ? `<br>Differenza con i netti: <b>${F.km.format(kv - kn)} km</b> tolti da accorciamenti e cancellazioni.` : "") + nota],
-    ["Elementi creati", F.int.format(s("create")), "", `<b>Elementi creati</b>: linee, punti e poligoni nuovi.<br>Modificate: ${F.int.format(s("modificate"))} · Cancellate: ${F.int.format(s("cancellate"))}${nota}`],
+    ["Elementi creati", F.int.format(s("create")), "", `<b>Elementi creati</b>: linee, punti e poligoni nuovi, di cui <b>${plur(s("punti"), "punto", "punti")}</b>.<br>Modificate: ${F.int.format(s("modificate"))} · Cancellate: ${F.int.format(s("cancellate"))}${nota}`],
+    ["Punti creati", F.int.format(s("punti")), "", `<b>Elementi puntuali creati</b> (nodi, pali, pozzetti, note…), per layer:<br>${elencoLayer(src, "punti") || "nessuno"}${nota}`],
     ["Operatori attivi", F.int.format(ops.size), "", ops.size ? `<b>Operatori con almeno una sincronizzazione:</b><br>${elenco(ops, 20)}` : "Nessun operatore"],
     ["Km medi operatore/giorno", F.dec.format(gOp ? kn / gOp : 0), "km",
       `<b>Resa media di un operatore in un giorno di lavoro.</b><br>${F.km.format(kn)} km netti ÷ ${plur(gOp, "giornata-operatore", "giornate-operatore")}.<div class='hint'>Una giornata-operatore = un operatore che ha sincronizzato in un giorno (3 operatori per 2 giorni = 6).</div>`],
@@ -727,6 +800,7 @@ function renderInfo() {
 }
 function render(soloCorpo) {
   calcola();
+  $("lLayer").hidden = ui.vista !== "dettaglio";
   if (!soloCorpo) renderHead();
   const src = renderBody();
   renderKpi(src); renderChart(righeGrafico()); renderInfo();
@@ -787,7 +861,13 @@ function tipValore(k, r, tot) {
     case "layer":     return `<div class="big">${esc(v)}</div>Layer QGIS. Nome completo: ${elenco(new Set((r._src || []).map(x => x.layer_id)), 3)}` + (r._o ? `<br>Operatori: ${elenco(r._o)}` : "");
     case "km_netti":  return spiegaKm(r.km_netti, r.km_nuovi);
     case "km_nuovi":  return `<div class="big">${F.km.format(v)} km nuovi</div>Lunghezza delle linee create ${ogg}. Gli elementi creati sono ${F.int.format(r.create)} (compresi eventuali punti e poligoni, che non hanno km).`;
-    case "create":    return `<div class="big">${plur(v, "elemento creato", "elementi creati")}</div>Linee, punti e poligoni nuovi.`;
+    case "create":    return `<div class="big">${plur(v, "elemento creato", "elementi creati")}</div>Linee, punti e poligoni nuovi` + (r.punti ? `, di cui <b>${plur(r.punti, "punto", "punti")}</b>.` : ".") +
+                             (v && r._src && perLayer(r._src).length > 1 ? `<br>${elencoLayer(r._src, "create")}` : "");
+    case "punti":     return `<div class="big">${plur(v, "punto creato", "punti creati")}</div>Elementi puntuali creati ${ogg} (nodi, pali, pozzetti, note…), già compresi in Create.` +
+                             (v && r._src ? `<br>${elencoLayer(r._src, "punti")}` : "");
+    case "tipo":      return `<div class="big">${geoIco(r.geom)}${esc(v)}</div>` + ({punto:"Layer di elementi <b>puntuali</b>: si contano gli elementi (colonna <i>di cui punti</i>), non i km.",
+                             linea:"Layer di <b>linee</b>: la lunghezza va nei km.", poligono:"Layer di <b>poligoni</b>: si contano gli elementi, non i km."}[r.geom] ||
+                             "Geometria non rilevata: tabella senza geometria (es. elenco delle tipologie) o layer con sole modifiche agli attributi.");
     case "modificate":return `<div class="big">${plur(v, "modifica", "modifiche")}</div>Modifiche sincronizzate alla geometria o agli attributi. Lo stesso elemento può contare più volte.`;
     case "cancellate":return `<div class="big">${plur(v, "elemento cancellato", "elementi cancellati")}</div>` + (v ? "Le linee cancellate vengono sottratte dai km netti." : "");
     case "giorni_attivi": { const g = [...(r._g || [])].sort();
@@ -829,8 +909,14 @@ function tipPer(el) {
     if (k === "_grp") return `<div class="big">${dLungo(tr.dataset.g)}</div>Totale della giornata: ${F.km.format(g.km_netti)} km netti, ${plur(g.n, "riga", "righe")}.<br>Operatori: ${elenco(g.o)}<br>Progetti: ${elenco(g.p)}`;
     return `<div class="ctx">Totale del ${dLab(tr.dataset.g)}</div>` + tipValore(k, g, true);
   }
+  if (tr.classList.contains("sub")) {
+    const s = SUBS[tr.dataset.s]; if (!s) return "";
+    if (k === "_layer") return `<div class="big">${geoIco(s.geom)}${esc(s.layer)}</div>Layer di tipo <b>${s.tipo}</b>${s.geom === "punto" ? `: ${plur(s.punti, "punto creato", "punti creati")}` : s.geom === "linea" ? `: ${F.km.format(s.km_netti)} km netti` : ""}.` +
+      `<br>Nome completo in QGIS: ${elenco(s._ids, 3)}<div class="hint">Clic per chiudere la riga</div>`;
+    return `<div class="ctx">${geoIco(s.geom)}${esc(s.layer)} · ${s.tipo}</div>` + tipValore(k, s);
+  }
   const r = VISIBILI[Number(tr.dataset.i)];
-  return r ? contesto(r) + tipValore(k, r) : "";
+  return r ? contesto(r) + tipValore(k, r) + (ui.vista === "dettaglio" ? `<div class="hint">Clic sulla riga per ${aperta(r) ? "chiudere i layer" : "vederla divisa per layer"}</div>` : "") : "";
 }
 const TIP = $("tip"); let tipEl = null, tipT = null, mx = 0, my = 0;
 function posTip() {
@@ -875,7 +961,7 @@ function renderAvvisi() {
 const pulisciLayer = s => String(s).replace(/_?[0-9a-f]{8}(_[0-9a-f]{4}){3}_[0-9a-f]{12}$/i, "").replace(/_?\d{17}$/, "") || String(s);
 function impostaDati(d) {
   const prima = DATI && DATI.aggiornato;
-  d.righe.forEach(r => { r.layer_id = r.layer; r.layer = pulisciLayer(r.layer); r.foto ||= 0; r.inizio ||= ""; r.fine ||= ""; });
+  d.righe.forEach(r => { r.layer_id = r.layer; r.layer = pulisciLayer(r.layer); r.foto ||= 0; r.punti ||= 0; r.geom ||= ""; r.inizio ||= ""; r.fine ||= ""; });
   DATI = d;
   if (prima !== DATI.aggiornato) {
     if (ui.periodo !== "custom") applicaPeriodo(ui.periodo);  // i periodi rapidi seguono il nuovo ultimo giorno
@@ -947,6 +1033,10 @@ function esporta() {
     const titolo = VISTE[ui.vista].l, file = `produzione_${ui.vista}_${dIso(new Date())}`;
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, foglioXlsx(COLS, VISIBILI), titolo.slice(0, 31));
+    if (ui.vista === "dettaglio") {
+      const righeL = VISIBILI.flatMap(r => perLayer(r._src).map(s => ({...s, giorno:r.giorno, operatore:r.operatore, progetto:r.progetto})));
+      XLSX.utils.book_append_sheet(wb, foglioXlsx(["giorno","operatore","progetto","layer","tipo",...MET,"foto"], righeL), "Dettaglio per layer");
+    }
     const info = [["Vista", titolo], ["Esportato il", new Date().toLocaleString("it-IT")],
       ["Dati aggiornati al", DATI ? new Date(DATI.aggiornato).toLocaleString("it-IT") : ""], ["Righe", VISIBILI.length],
       ...descrizioneFiltri().map(f => ["Filtro", f])];
@@ -985,6 +1075,15 @@ $("tabs").addEventListener("click", e => {
   ui.vista = b.dataset.v;
   $("tabs").querySelectorAll("button").forEach(x => x.setAttribute("aria-selected", x === b));
   salvaUi(); render();
+});
+$("cLayer").checked = ui.layer;
+$("cLayer").addEventListener("change", e => { ui.layer = e.target.checked; invertite.clear(); salvaUi(); nascondiTip(); renderBody(); });
+$("tb").addEventListener("click", e => {
+  const tr = e.target.closest("tr.det, tr.sub"); if (!tr || String(getSelection())) return;  // non chiude mentre si seleziona testo
+  const r = VISIBILI[Number(tr.dataset.i ?? tr.dataset.s.split(":")[0])];
+  const k = chiaveDet(r);
+  invertite.has(k) ? invertite.delete(k) : invertite.add(k);
+  nascondiTip(); renderBody();
 });
 $("th").addEventListener("click", e => {
   const th = e.target.closest("tr.h th[data-k]"); if (!th) return;

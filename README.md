@@ -15,7 +15,7 @@ QField (campo) ──sync──▶ QFieldCloud ──▶ GitHub Action ──▶
 
 1. La GitHub Action [`aggiorna.yml`](.github/workflows/aggiorna.yml) esegue `qfc_report.py`, che legge da
    QFieldCloud i *delta* (modifiche sincronizzate) degli ultimi 12 mesi e li somma per giorno, operatore,
-   progetto e layer. Il selettore *Periodo* della board lavora su tutto questo storico.
+   progetto e layer (con il tipo di geometria del layer: punto, linea, poligono). Il selettore *Periodo* della board lavora su tutto questo storico.
 2. Il risultato (`sito/dati.json`) viene pubblicato su GitHub Pages insieme alla board `sito/index.html`.
 3. La board legge `dati.json`, ricalcola viste/filtri/totali nel browser ed esporta in Excel (SheetJS).
 
@@ -29,7 +29,7 @@ L'Action parte:
 
 | File | Cosa fa |
 |---|---|
-| `qfc_report.py` | Motore di calcolo: login QFieldCloud, download delta, km netti/nuovi, create/modificate/cancellate, foto e orari di inizio/fine (prima e ultima foto, letti dal nome del file). Produce JSON (board) o Excel. |
+| `qfc_report.py` | Motore di calcolo: login QFieldCloud, download delta, km netti/nuovi, create/modificate/cancellate, punti creati e tipo di geometria di ogni layer, foto e orari di inizio/fine (prima e ultima foto, letti dal nome del file). Produce JSON (board) o Excel. |
 | `sito/index.html` | La board (HTML/CSS/JS in un solo file, nessuna build). |
 | `.github/workflows/aggiorna.yml` | Aggiornamento automatico e pubblicazione su Pages. |
 | `requirements.txt` | Librerie Python usate dall'Action. |
