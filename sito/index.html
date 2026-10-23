@@ -4,7 +4,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Produzione WO SINFI</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 :root{
   color-scheme:dark;
@@ -295,7 +294,7 @@ dialog.guida::backdrop{background:rgba(1,4,9,.7)}
   <div id="report">
     <section class="period-bar" aria-label="Periodo dei dati">
       <div>
-        <div class="pb-label">Periodo dei dati · tabella, grafici ed export Excel</div>
+        <div class="pb-label">Periodo dei dati · tabella, grafici ed export CSV</div>
         <div class="pb-range"><span id="pbDa">–</span><span class="pb-arrow">→</span><span id="pbA">–</span><span class="pb-days" id="pbGiorni"></span></div>
         <div class="pb-sub" id="pbSub"></div>
       </div>
@@ -304,7 +303,7 @@ dialog.guida::backdrop{background:rgba(1,4,9,.7)}
         <div class="pb-row">
           <input class="fi" type="date" id="fDa" aria-label="Dal" data-tip="Mostra i dati <b>dal</b> giorno indicato (giorno di sincronizzazione)"> –
           <input class="fi" type="date" id="fA" aria-label="Al" data-tip="Mostra i dati <b>fino al</b> giorno indicato (compreso)">
-          <button class="btn blue" id="bXls" data-tip="Scarica in Excel <b>esattamente</b> la tabella a schermo, per il periodo indicato qui accanto: stessa vista, stessi filtri, stesso ordinamento. Nel foglio <i>Info</i> trovi periodo e filtri applicati."><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg> Esporta Excel</button>
+          <button class="btn blue" id="bXls" data-tip="Scarica in CSV le righe della tabella a schermo, per il periodo indicato qui accanto (stessi filtri), nel formato <b>report produzione</b> da caricare in Gestione Staffing: Anno, Mese, Giorno, Operatore, Inizio, Fine, Lunghezza."><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg> Esporta CSV</button>
         </div>
       </div>
     </section>
@@ -374,7 +373,7 @@ dialog.guida::backdrop{background:rgba(1,4,9,.7)}
       </div>
       <div class="footer-bar">
         <span id="footer-count"></span>
-        <button class="export-btn" id="bXls2" data-tip="Scarica in Excel <b>esattamente</b> la tabella a schermo: stessa vista, stessi filtri, stesso ordinamento. Nel foglio <i>Info</i> trovi i filtri applicati."><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg> Esporta Excel</button>
+        <button class="export-btn" id="bXls2" data-tip="Scarica in CSV le righe della tabella a schermo (stesso periodo, stessi filtri) nel formato <b>report produzione</b> da caricare in Gestione Staffing."><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg> Esporta CSV</button>
       </div>
     </div>
 
@@ -407,7 +406,7 @@ dialog.guida::backdrop{background:rgba(1,4,9,.7)}
 <h3 id="g-cosa">1. A cosa serve</h3>
 <p>La board mostra <b>quanto lavoro hanno prodotto gli operatori</b> sui progetti QFieldCloud: quanti km di linee hanno
 disegnato, quanti elementi hanno creato, modificato o cancellato, giorno per giorno, operatore per operatore e progetto per progetto.</p>
-<p>Serve per controllare l'avanzamento, confrontare la resa degli operatori e preparare i riepiloghi in Excel.</p>
+<p>Serve per controllare l'avanzamento, confrontare la resa degli operatori e preparare il report produzione in CSV.</p>
 
 <h3 id="g-dati">2. Da dove arrivano i dati</h3>
 <ol>
@@ -501,7 +500,7 @@ la ricerca e i filtri su operatore, progetto e layer.</p>
 <h3 id="g-filtri">6. Filtrare e ordinare</h3>
 <h4>Periodo (barra blu in alto)</h4>
 <ul>
-  <li>La barra in alto mostra in grande <b>da che giorno a che giorno</b> stai guardando i dati: è lo stesso periodo di tabella, riquadri, grafici ed <b>export Excel</b>.</li>
+  <li>La barra in alto mostra in grande <b>da che giorno a che giorno</b> stai guardando i dati: è lo stesso periodo di tabella, riquadri, grafici ed <b>export CSV</b>.</li>
   <li><b>Periodo rapido</b>: scegli un periodo rapido (ultimi 7, 30 o 60 giorni, mese corrente, mese scorso, anno corrente, tutto lo storico). Alla prossima apertura la board
     riparte dallo stesso periodo, aggiornato al giorno corrente. All'apertura sono mostrati gli ultimi 60 giorni.</li>
   <li><b>Date dal / al</b>: per un periodo preciso, dentro gli ultimi 12 mesi. Il periodo diventa <i>Personalizzato</i>.</li>
@@ -509,7 +508,7 @@ la ricerca e i filtri su operatore, progetto e layer.</p>
 <h4>Filtri (pannello a sinistra)</h4>
 <ul>
   <li><b>Ricerca globale</b>: cerca contemporaneamente in operatore, progetto e layer.</li>
-  <li><b>Operatore, Progetto, Layer, Tipo elemento</b>: mostrano solo quel valore in tutta la board (riquadri, grafici, tabella, Excel). Il filtro attivo ha il bordo blu.</li>
+  <li><b>Operatore, Progetto, Layer, Tipo elemento</b>: mostrano solo quel valore in tutta la board (riquadri, grafici, tabella, CSV). Il filtro attivo ha il bordo blu.</li>
   <li>Le <b>pillole dei layer</b> in alto e le voci dei <b>grafici a barre</b> sono cliccabili: un clic imposta il filtro corrispondente, un secondo clic lo toglie.</li>
   <li><b>Reset</b> toglie tutti i filtri e torna agli ultimi 60 giorni.</li>
 </ul>
@@ -540,13 +539,14 @@ il secondo inverte. La freccia blu indica la colonna usata.</p>
 <p>L'ultima riga della tabella, sempre visibile, somma le righe <b>filtrate</b>. Per Giorni attivi, Operatori e Progetti indica quanti sono
 <b>diversi</b> in tutto, non la somma.</p>
 
-<h3 id="g-excel">7. Esportare in Excel</h3>
+<h3 id="g-csv">7. Esportare in CSV</h3>
 <ul>
-  <li><b>Esporta Excel</b> (nella barra del periodo in alto, o in fondo alla tabella) scarica esattamente la tabella a schermo: stesso periodo, stessa vista, stessi filtri, stesso ordinamento.</li>
-  <li>Dalla vista <b>Dettaglio</b> il file contiene anche il foglio <b>Dettaglio per layer</b>, con le stesse righe divise per layer (aperte o chiuse che siano a schermo).</li>
-  <li>Il file ha i filtri di Excel già attivi e una riga <b>Totale</b> che si ricalcola se filtri anche dentro Excel.</li>
-  <li>Il foglio <b>Info</b> riporta periodo, vista, data di esportazione, data di aggiornamento dei dati e filtri applicati.</li>
-  <li>Il file finisce nella cartella <i>Download</i> del browser con il periodo nel nome, ad esempio <code>produzione_operatore_2026-08-18_2026-10-16.xlsx</code>.</li>
+  <li><b>Esporta CSV</b> (nella barra del periodo in alto, o in fondo alla tabella) scarica le righe della tabella a schermo: stesso periodo e stessi filtri, in qualunque vista.</li>
+  <li>Il file è nel formato <b>report produzione</b> che si carica in Gestione Staffing con <i>Carica report</i>: una riga per giorno, operatore, progetto e layer, con le colonne
+    <code>Layer;Anno;Mese;Giorno;Operatore;Progetto;Inizio;Fine;Lunghezza</code>.</li>
+  <li><b>Mese</b> è il nome del mese (es. <i>ottobre</i>), <b>Inizio</b> e <b>Fine</b> sono gli orari della prima e dell'ultima foto (vuoti se non ci sono foto), <b>Lunghezza</b> sono i <b>km netti in metri</b>.</li>
+  <li>Separatore <code>;</code> e decimali con la virgola: si apre anche direttamente con Excel.</li>
+  <li>Il file finisce nella cartella <i>Download</i> del browser con il periodo nel nome, ad esempio <code>produzione_operatore_2026-08-18_2026-10-16.csv</code>.</li>
 </ul>
 
 <h3 id="g-limiti">8. Avvisi e limiti da conoscere</h3>
@@ -556,7 +556,7 @@ il secondo inverte. La freccia blu indica la colonna usata.</p>
   <li><b>Progetti saltati</b>: se la board ha saltato progetti inattivi lo trovi scritto negli avvisi.</li>
   <li><b>Nomi dei layer</b>: sono mostrati senza il codice tecnico finale che QGIS aggiunge (es. <code>TR_ELE_UNITO_ab68…</code> diventa <code>TR_ELE_UNITO</code>). Passa il mouse sul nome per vedere quello completo.</li>
   <li><b>Tipo di layer</b>: è ricavato dalle geometrie sincronizzate negli ultimi 12 mesi. Un layer su cui sono stati modificati solo gli attributi, senza mai creare o spostare elementi, risulta <b>n.d.</b></li>
-  <li><b>Righe mostrate</b>: per velocità la tabella mostra al massimo 3.000 righe; l'export Excel le contiene sempre tutte.</li>
+  <li><b>Righe mostrate</b>: per velocità la tabella mostra al massimo 3.000 righe; l'export CSV le contiene sempre tutte.</li>
   <li>Il nome mostrato per l'operatore è il suo <b>utente QFieldCloud</b>.</li>
 </ul>
 
@@ -746,7 +746,7 @@ function aggrega(R, vista) {
   }
   return [...acc.values()];
 }
-// righe di un aggregato divise per layer (sottorighe del Dettaglio, foglio Excel per layer)
+// righe di un aggregato divise per layer (sottorighe del Dettaglio)
 function perLayer(src) {
   const acc = new Map();
   for (const r of src) {
@@ -871,7 +871,7 @@ function renderBody() {
     out += `<tr data-i="${i}"${ui.vista === "dettaglio" ? ` class="det${ap ? " open" : ""}" aria-expanded="${ap}"` : ""}>` + COLS.map(k => cella(r, k, i, maxKm, grp)).join("") + "</tr>";
     if (ap) { out += sottoRighe(r, i); sub = true; }
   });
-  if (VISIBILI.length > LIMITE) out += `<tr><td colspan="${COLS.length}" class="vuoto">Mostrate le prime ${LIMITE} righe su ${VISIBILI.length}: l'export Excel le contiene tutte.</td></tr>`;
+  if (VISIBILI.length > LIMITE) out += `<tr><td colspan="${COLS.length}" class="vuoto">Mostrate le prime ${LIMITE} righe su ${VISIBILI.length}: l'export CSV le contiene tutte.</td></tr>`;
   const tb = $("tb");
   tb.classList.toggle("grouped", grp || sub);
   tb.innerHTML = out || `<tr><td colspan="${COLS.length}" class="vuoto">${DATI ? "Nessun dato per questi filtri" : "Nessun dato disponibile"}</td></tr>`;
@@ -1229,53 +1229,32 @@ async function caricaDati(manuale) {
   }
 }
 
-/* ---------- export Excel (nel browser, con SheetJS) ---------- */
-const XFMT = {km: "#,##0.000", mq: "#,##0", int: "#,##0", dec: "#,##0.00", data: "dd/mm/yyyy", ora: "hh:mm", ore: "[h]:mm"};
-const NON_SOMMARE = ["giorni_attivi", "n_operatori", "n_progetti", "km_al_giorno"];
-function foglioXlsx(colonne, righe) {
-  const aoa = [colonne.map(k => COL[k].l)];
-  // date come numero seriale Excel: evita sfasamenti di fuso orario
-  const seriale = iso => { const [y, m, d] = iso.split("-").map(Number); return (Date.UTC(y, m - 1, d) - Date.UTC(1899, 11, 30)) / 86400000; };
-  // orari come frazione di giorno: in Excel si possono sottrarre per avere la durata
-  righe.forEach(r => aoa.push(colonne.map(k => COL[k].t === "data" ? seriale(r[k]) : COL[k].t === "ora" ? (r[k] ? minuti(r[k]) / 1440 : null) : COL[k].t === "ore" ? (r[k] == null ? null : r[k] / 24) : typeof r[k] === "number" ? Math.round(r[k] * 10000) / 10000 : r[k])));
-  const ws = XLSX.utils.aoa_to_sheet(aoa);
-  const n = righe.length;
-  colonne.forEach((k, j) => {
-    const fmtCol = XFMT[COL[k].t];
-    if (fmtCol) for (let i = 1; i <= n; i++) { const c = ws[XLSX.utils.encode_cell({r: i, c: j})]; if (c) c.z = fmtCol; }
+/* ---------- export CSV (formato "report produzione" di Gestione Staffing) ---------- */
+// Una riga per giorno + operatore + progetto + layer delle righe a schermo (stesso periodo e filtri, qualunque vista).
+// L'import "Carica report" di Gestione Staffing legge le colonne per nome: Mese col nome italiano,
+// Inizio/Fine HH:MM, Lunghezza in metri (km netti), separatore ";" e decimali con la virgola.
+const MESI_IT = ["gennaio","febbraio","marzo","aprile","maggio","giugno","luglio","agosto","settembre","ottobre","novembre","dicembre"];
+const CSV_COL = ["Layer","Anno","Mese","Giorno","Operatore","Progetto","Inizio","Fine","Lunghezza"];
+const csvCampo = v => { const s = String(v ?? ""); return /[;"\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
+function righeCsv() {
+  const src = VISIBILI.flatMap(r => r._src).sort((x, y) => x.giorno.localeCompare(y.giorno) ||
+    x.operatore.localeCompare(y.operatore, "it") || x.progetto.localeCompare(y.progetto, "it") || x.layer.localeCompare(y.layer, "it"));
+  return src.map(r => {
+    const [y, m, d] = r.giorno.split("-");
+    const metri = (Math.round(r.km_netti * 10000) / 10).toFixed(1).replace(".", ",");
+    return [r.layer, y, MESI_IT[m - 1], Number(d), r.operatore, r.progetto, r.inizio || "", r.fine || "", metri];
   });
-  if (n) {
-    const L = j => XLSX.utils.encode_col(j);
-    ws["!autofilter"] = {ref: `A1:${L(colonne.length - 1)}${n + 1}`};
-    XLSX.utils.sheet_add_aoa(ws, [["Totale (righe visibili)"]], {origin: {r: n + 1, c: 0}});
-    colonne.forEach((k, j) => {
-      if (j === 0 || !isNum(k) || NON_SOMMARE.includes(k)) return;
-      ws[XLSX.utils.encode_cell({r: n + 1, c: j})] = {t: "n", f: `SUBTOTAL(109,${L(j)}2:${L(j)}${n + 1})`, z: XFMT[COL[k].t]};
-    });
-    ws["!ref"] = `A1:${L(colonne.length - 1)}${n + 2}`;
-  }
-  ws["!cols"] = colonne.map(k => ({wch: Math.min(45, Math.max(11, COL[k].l.length + 3, ...righe.slice(0, 500).map(r => String(r[k] ?? "").length + 3)))}));
-  return ws;
 }
 function esporta() {
   calcola();
   try {
-    if (!window.XLSX) throw new Error("libreria Excel non caricata, controlla la connessione");
-    const titolo = VISTE[ui.vista].l, [pda, pa] = periodoEff(), file = `produzione_${ui.vista}_${pda}_${pa}`;
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, foglioXlsx(COLS, VISIBILI), titolo.slice(0, 31));
-    if (ui.vista === "dettaglio") {
-      const righeL = VISIBILI.flatMap(r => perLayer(r._src).map(s => ({...s, giorno:r.giorno, operatore:r.operatore, progetto:r.progetto})));
-      XLSX.utils.book_append_sheet(wb, foglioXlsx(["giorno","operatore","progetto","layer","tipo",...MET,"foto"], righeL), "Dettaglio per layer");
-    }
-    const info = [["Periodo", `dal ${dIt(pda)} al ${dIt(pa)} (${plur(giorniTra(pda, pa), "giorno", "giorni")})`], ["Vista", titolo], ["Esportato il", new Date().toLocaleString("it-IT")],
-      ["Dati aggiornati al", DATI ? new Date(DATI.aggiornato).toLocaleString("it-IT") : ""], ["Righe", VISIBILI.length],
-      ...descrizioneFiltri().filter(f => !f.startsWith("Periodo")).map(f => ["Filtro", f])];
-    const wsInfo = XLSX.utils.aoa_to_sheet(info);
-    wsInfo["!cols"] = [{wch: 24}, {wch: 90}];
-    XLSX.utils.book_append_sheet(wb, wsInfo, "Info");
-    XLSX.writeFile(wb, `${file}.xlsx`);
-    toast(`Excel esportato · ${plur(VISIBILI.length, "riga", "righe")} dal ${dIt(pda)} al ${dIt(pa)}`);
+    const [pda, pa] = periodoEff(), file = `produzione_${ui.vista}_${pda}_${pa}`, righe = righeCsv();
+    const csv = "﻿" + [CSV_COL, ...righe].map(r => r.map(csvCampo).join(";")).join("\r\n") + "\r\n";
+    const url = URL.createObjectURL(new Blob([csv], {type: "text/csv;charset=utf-8"}));
+    const a = document.createElement("a");
+    a.href = url; a.download = `${file}.csv`; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    toast(`CSV esportato · ${plur(righe.length, "riga", "righe")} dal ${dIt(pda)} al ${dIt(pa)}`);
   } catch (e) { toast("Export non riuscito: " + e.message); }
 }
 let tt;
