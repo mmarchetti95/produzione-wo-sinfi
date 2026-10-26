@@ -260,6 +260,32 @@ details.avvisi li{margin:3px 0}
 #empty-state h2{font-size:16px;font-weight:600;color:var(--text);margin-bottom:8px}
 #empty-state p{font-size:13px;max-width:420px;margin:0 auto}
 
+/* SELETTORE dei filtri del pannello (sostituisce il menu nativo: finestra centrata, ricerca, scrollbar) */
+.fi.pick{display:flex;align-items:center;justify-content:space-between;gap:8px;text-align:left;cursor:pointer}
+.fi.pick:hover{border-color:var(--border2)}
+.fi.pick.on:hover,.fi.pick:focus-visible{border-color:var(--blue)}
+.pk-l{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fi.pick svg{width:15px;height:15px;flex:none;color:var(--muted)}
+dialog.picker{border:1px solid var(--border2);border-radius:12px;padding:0;width:min(440px,calc(100vw - 32px));background:var(--surface);color:var(--text);box-shadow:0 20px 60px rgba(0,0,0,.6);margin:auto}
+dialog.picker::backdrop{background:rgba(1,4,9,.6)}
+.pk-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 14px 0 16px}
+.pk-head h2{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em}
+.pk-x{border:0;background:none;color:var(--muted);font-size:16px;line-height:1;cursor:pointer;padding:6px 8px;border-radius:6px}
+.pk-x:hover{color:var(--text);background:var(--surface3)}
+.pk-q{padding:10px 14px}
+.pk-list{max-height:min(52vh,440px);overflow:auto;padding:6px;border-top:1px solid var(--border);border-bottom:1px solid var(--border);overscroll-behavior:contain}
+.pk-opt{display:flex;align-items:center;gap:8px;width:100%;border:0;background:none;text-align:left;padding:7px 10px;border-radius:6px;cursor:pointer;font-size:13px;color:var(--text)}
+.pk-opt:hover{background:var(--surface3)}
+.pk-opt.act{background:rgba(88,166,255,.14)}
+.pk-opt.sel{color:var(--blue);font-weight:600}
+.pk-opt .ck{width:14px;flex:none;color:var(--blue);font-size:12px}
+.pk-opt .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pk-opt .nm mark{background:none;color:var(--blue);font-weight:700}
+.pk-opt .v{color:var(--muted);font-size:12px;font-weight:500;font-variant-numeric:tabular-nums;white-space:nowrap}
+.pk-opt.zero .nm{color:var(--muted)}
+.pk-vuoto{padding:24px 10px;text-align:center;color:var(--muted);font-size:13px}
+.pk-foot{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;padding:8px 16px;font-size:11px;color:var(--muted)}
+
 /* GUIDA */
 dialog.guida{border:1px solid var(--border);border-radius:14px;padding:0;width:min(880px,calc(100vw - 32px));max-height:calc(100vh - 48px);overflow:hidden;background:var(--surface);color:var(--text);box-shadow:0 20px 60px rgba(0,0,0,.6);margin:auto}
 dialog.guida::backdrop{background:rgba(1,4,9,.7)}
@@ -342,20 +368,24 @@ dialog.guida::backdrop{background:rgba(1,4,9,.7)}
         </div>
         <hr class="filter-divider">
         <div class="filter-group">
-          <label class="fl" for="fOp">Operatore</label>
-          <select class="fi" id="fOp" data-g="operatore"><option value="">— Tutti —</option></select>
+          <label class="fl" for="fOpB">Operatore</label>
+          <button type="button" class="fi pick" id="fOpB" data-pick="fOp" aria-haspopup="dialog"><span class="pk-l">— Tutti —</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+          <select class="fi" id="fOp" hidden data-g="operatore"><option value="">— Tutti —</option></select>
         </div>
         <div class="filter-group">
-          <label class="fl" for="fProg">Progetto</label>
-          <select class="fi" id="fProg" data-g="progetto"><option value="">— Tutti —</option></select>
+          <label class="fl" for="fProgB">Progetto</label>
+          <button type="button" class="fi pick" id="fProgB" data-pick="fProg" aria-haspopup="dialog"><span class="pk-l">— Tutti —</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+          <select class="fi" id="fProg" hidden data-g="progetto"><option value="">— Tutti —</option></select>
         </div>
         <div class="filter-group">
-          <label class="fl" for="fLayer">Layer</label>
-          <select class="fi" id="fLayer" data-g="layer"><option value="">— Tutti —</option></select>
+          <label class="fl" for="fLayerB">Layer</label>
+          <button type="button" class="fi pick" id="fLayerB" data-pick="fLayer" aria-haspopup="dialog"><span class="pk-l">— Tutti —</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+          <select class="fi" id="fLayer" hidden data-g="layer"><option value="">— Tutti —</option></select>
         </div>
         <div class="filter-group">
-          <label class="fl" for="fGeom">Tipo elemento</label>
-          <select class="fi" id="fGeom" data-g="geom"><option value="">— Tutti —</option><option value="punto">Punti</option><option value="linea">Linee</option><option value="poligono">Poligoni</option><option value="nd">Non rilevato</option></select>
+          <label class="fl" for="fGeomB">Tipo elemento</label>
+          <button type="button" class="fi pick" id="fGeomB" data-pick="fGeom" aria-haspopup="dialog"><span class="pk-l">— Tutti —</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+          <select class="fi" id="fGeom" hidden data-g="geom"><option value="">— Tutti —</option><option value="punto">Punti</option><option value="linea">Linee</option><option value="poligono">Poligoni</option><option value="nd">Non rilevato</option></select>
         </div>
         <div class="btn-row">
           <button class="btn" id="bReset" data-tip="Toglie periodo, ricerca, filtri del pannello e filtri di colonna della vista corrente">Reset</button>
@@ -541,7 +571,9 @@ la ricerca e i filtri su operatore, progetto e layer.</p>
 <h4>Filtri (pannello a sinistra)</h4>
 <ul>
   <li><b>Ricerca globale</b>: cerca contemporaneamente in operatore, progetto e layer.</li>
-  <li><b>Operatore, Progetto, Layer, Tipo elemento</b>: mostrano solo quel valore in tutta la board (riquadri, grafici, tabella, CSV). Il filtro attivo ha il bordo blu.</li>
+  <li><b>Operatore, Progetto, Layer, Tipo elemento</b>: mostrano solo quel valore in tutta la board (riquadri, grafici, tabella, CSV). Il filtro attivo ha il bordo blu.
+    Il clic apre un elenco al centro dello schermo con una casella <b>Filtra</b> per trovare subito la voce (vale la stessa sintassi della ricerca, es. <code>FGN, !Cis</code>);
+    accanto a ogni voce ci sono i km netti del periodo (gli elementi creati per Layer e Tipo), le voci senza lavoro nel periodo sono in grigio. Si sceglie con il mouse o con ↑ ↓ e Invio.</li>
   <li>Le <b>pillole dei layer</b> in alto e le voci dei <b>grafici a barre</b> sono cliccabili: un clic imposta il filtro corrispondente, un secondo clic lo toglie.</li>
   <li><b>Reset</b> toglie tutti i filtri e torna agli ultimi 60 giorni.</li>
 </ul>
@@ -605,6 +637,13 @@ il secondo inverte. La freccia blu indica la colonna usata.</p>
 </table>
     </div>
   </div>
+</dialog>
+
+<dialog class="picker" id="picker" aria-labelledby="pkTit">
+  <div class="pk-head"><h2 id="pkTit"></h2><button class="pk-x" id="pkX" aria-label="Chiudi">✕</button></div>
+  <div class="pk-q"><input class="fi" type="search" id="pkQ" placeholder="Filtra…" autocomplete="off" aria-controls="pkList"></div>
+  <div class="pk-list" id="pkList" role="listbox"></div>
+  <div class="pk-foot"><span id="pkN"></span><span>↑ ↓ per scegliere · Invio per confermare · Esc per chiudere</span></div>
 </dialog>
 
 <div class="tip" id="tip" role="tooltip"></div>
@@ -1114,7 +1153,10 @@ function renderInfo() {
   $("footer-count").textContent = `${plur(VISIBILI.length, "riga", "righe")} · vista ${VISTE[ui.vista].l}`;
   const n = righeBase().length, tot = DATI ? DATI.righe.length : 0;
   $("resInfo").textContent = `${F.int.format(n)} di ${F.int.format(tot)} record (giorno · operatore · progetto · layer)`;
-  for (const [k, id] of Object.entries(GSEL)) $(id).classList.toggle("on", !!ui.f[k]);
+  for (const [k, id] of Object.entries(GSEL)) {
+    const b = $(id + "B"), o = $(id).selectedOptions[0];
+    b.querySelector(".pk-l").textContent = o ? o.text : "— Tutti —"; b.classList.toggle("on", !!ui.f[k]);
+  }
 }
 function render(soloCorpo) {
   calcola();
@@ -1251,7 +1293,7 @@ function posTip() {
 }
 function nascondiTip() { clearTimeout(tipT); TIP.style.display = "none"; tipEl = null; }
 document.addEventListener("mouseover", e => {
-  if ($("guida").open) return;
+  if ($("guida").open || $("picker").open) return;
   const el = e.target.closest("[data-tip], tr.h th[data-k], tr.f input[data-f], #tabs button, .bars .b, #tb td[data-k], #tf td[data-k]");
   if (el === tipEl) return;
   tipEl = el; clearTimeout(tipT);
@@ -1425,6 +1467,58 @@ $("fDa").addEventListener("change", e => dataManuale("da", e.target.value));
 $("fA").addEventListener("change", e => dataManuale("a", e.target.value));
 const filtroPannello = (k, v) => { ui.f[k] = v; $(GSEL[k]).value = v; nascondiTip(); render(true); };
 Object.entries(GSEL).forEach(([k, id]) => $(id).addEventListener("change", e => filtroPannello(k, e.target.value)));
+
+/* ---------- selettore dei filtri del pannello ---------- */
+// le <select> nascoste restano la fonte delle voci e del valore; il selettore le legge e le imposta
+const PK = {id:"", k:"", voci:[], vis:[], act:0};
+const PK_NOMI = {operatore:["operatore", "operatori"], progetto:["progetto", "progetti"], layer:["layer", "layer"], geom:["tipo", "tipi"]};
+function apriPicker(id) {
+  const sel = $(id), k = sel.dataset.g, conta = new Map();
+  // a destra di ogni voce: km netti nel periodo (elementi creati per layer e tipo), ignorando questo stesso filtro
+  for (const r of righeBase(k)) { const v = k === "geom" ? geomF(r) : r[k]; conta.set(v, (conta.get(v) || 0) + (k === "layer" || k === "geom" ? r.create : r.km_netti)); }
+  PK.id = id; PK.k = k;
+  PK.voci = [...sel.options].map(o => ({v:o.value, t:o.text, n:o.value ? conta.get(o.value) : null}));
+  $("pkTit").textContent = $(id + "B").closest(".filter-group").querySelector(".fl").textContent;
+  $("pkQ").value = ""; nascondiTip();
+  $("picker").showModal();
+  renderPicker(true);
+  if (matchMedia("(hover:hover)").matches) $("pkQ").focus();  // su telefono non apro la tastiera
+}
+function renderPicker(daSel) {
+  const q = $("pkQ").value.trim(), cur = $(PK.id).value, km = PK.k !== "layer" && PK.k !== "geom";
+  PK.vis = PK.voci.filter(o => q ? o.v && matchTesto(o.t, q) : true);
+  if (daSel) PK.act = Math.max(0, PK.vis.findIndex(o => o.v === cur));
+  PK.act = Math.min(PK.act, PK.vis.length - 1);
+  const parola = q.split(",")[0].trim();
+  const evid = t => { const i = parola && !parola.startsWith("!") ? t.toLowerCase().indexOf(parola.toLowerCase()) : -1;
+    return i < 0 ? esc(t) : esc(t.slice(0, i)) + `<mark>${esc(t.slice(i, i + parola.length))}</mark>` + esc(t.slice(i + parola.length)); };
+  $("pkList").innerHTML = PK.vis.map((o, i) => `<button type="button" role="option" class="pk-opt${o.v === cur ? " sel" : ""}${i === PK.act ? " act" : ""}${o.v && !o.n ? " zero" : ""}" data-i="${i}" aria-selected="${o.v === cur}">` +
+    `<span class="ck">${o.v === cur ? "✓" : ""}</span><span class="nm">${evid(o.t)}</span>` +
+    (o.v ? `<span class="v">${o.n ? (km ? F.km.format(o.n) + " km" : F.int.format(o.n) + " el.") : "–"}</span>` : "") + `</button>`).join("") ||
+    `<div class="pk-vuoto">Nessun risultato per “${esc(q)}”</div>`;
+  const n = PK.voci.length - 1, [s, p] = PK_NOMI[PK.k];
+  $("pkN").textContent = q ? `${PK.vis.length} di ${plur(n, s, p)}` : `${plur(n, s, p)} · a destra ${km ? "km netti" : "elementi creati"} nel periodo`;
+  const a = $("pkList").querySelector(".act");
+  if (a) a.scrollIntoView({block: daSel ? "center" : "nearest"});
+}
+function scegliPicker(i) {
+  const o = PK.vis[i]; if (!o) return;
+  $("picker").close();
+  const sel = $(PK.id);
+  if (sel.value !== o.v) { sel.value = o.v; sel.dispatchEvent(new Event("change")); }
+}
+document.querySelectorAll(".fi.pick").forEach(b => {
+  b.addEventListener("click", () => apriPicker(b.dataset.pick));
+  b.addEventListener("keydown", e => { if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); apriPicker(b.dataset.pick); } });
+});
+$("pkQ").addEventListener("input", () => { PK.act = 0; renderPicker(); });
+$("pkQ").addEventListener("keydown", e => {
+  if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); PK.act = Math.max(0, Math.min(PK.vis.length - 1, PK.act + (e.key === "ArrowDown" ? 1 : -1))); renderPicker(); }
+  else if (e.key === "Enter") { e.preventDefault(); scegliPicker(PK.act); }
+});
+$("pkList").addEventListener("click", e => { const b = e.target.closest(".pk-opt"); if (b) scegliPicker(Number(b.dataset.i)); });
+$("pkX").addEventListener("click", () => $("picker").close());
+$("picker").addEventListener("click", e => { if (e.target === $("picker")) $("picker").close(); });
 $("layer-pills").addEventListener("click", e => {
   const p = e.target.closest(".layer-pill[data-layer]"); if (!p) return;
   filtroPannello("layer", p.dataset.layer && ui.f.layer !== p.dataset.layer ? p.dataset.layer : "");
