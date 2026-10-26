@@ -30,7 +30,7 @@ L'Action parte:
 
 | File | Cosa fa |
 |---|---|
-| `qfc_report.py` | Motore di calcolo: login QFieldCloud, download delta, km netti/nuovi, create/modificate/cancellate, punti creati e tipo di geometria di ogni layer, foto e orari di inizio/fine (prima e ultima foto, letti dal nome del file), orario dell'ultima sincronizzazione. Produce JSON (board) o Excel. |
+| `qfc_report.py` | Motore di calcolo: login QFieldCloud, download delta, km netti/nuovi (nei netti si sottraggono solo cancellazioni e accorciamenti di linee create da QField, la rete di base rimossa va in `km_base`), create/modificate/cancellate, punti creati e tipo di geometria di ogni layer, foto e orari di inizio/fine (prima e ultima foto, letti dal nome del file), orario dell'ultima sincronizzazione. Produce JSON (board) o Excel. |
 | `sito/index.html` | La board (HTML/CSS/JS in un solo file, nessuna build). |
 | `.github/workflows/aggiorna.yml` | Aggiornamento automatico e pubblicazione su Pages. |
 | `requirements.txt` | Librerie Python usate dall'Action. |

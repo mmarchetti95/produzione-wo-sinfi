@@ -5,7 +5,9 @@ Report produzione rilievi da QFieldCloud (EagleProjects) - motore di calcolo
 Legge i "delta" (modifiche sincronizzate da QField) di tutti i progetti
 visibili all'utente configurato e calcola, per giorno / operatore / progetto / layer:
   - km netti di linee   = nuove + allungamenti - accorciamenti - cancellazioni
+                          (accorciamenti e cancellazioni solo di linee create da QField)
   - km nuovi            = solo linee create (lordo)
+  - km base rimossi     = linee di base del progetto (non create da QField) cancellate o accorciate
   - feature create / modificate / cancellate, e quanti dei creati sono punti
   - tipo di geometria di ogni layer (punto, linea, poligono)
   - foto scattate, orario della prima (inizio) e dell'ultima (fine) foto della giornata
@@ -71,7 +73,7 @@ STATI_PROBLEMA = {"conflict", "not_applied", "error", "unpermitted"}
 KM_MAX_FEATURE = 50      # una feature più lunga è quasi certamente un errore di CRS
 MARGINE_INATTIVI = 30    # giorni: progetti fermi da prima di (dal - margine) vengono saltati
 WORKERS = 6              # download in parallelo
-METRICHE = ("km_netti", "km_nuovi", "mq_netti", "create", "punti", "modificate", "cancellate", "problemi", "foto")
+METRICHE = ("km_netti", "km_nuovi", "km_base", "mq_netti", "create", "punti", "modificate", "cancellate", "problemi", "foto")
 TIPI = {"punto": "Punto", "linea": "Linea", "poligono": "Poligono", "": "n.d."}  # geometria del layer
 RE_FOTO = re.compile(r"\.(jpe?g|png|heic|heif|webp)$", re.I)
 # data e ora nel nome del file: JPEG_20261015083012345.jpg, IMG_20261015_083012.jpg, 2026-10-15_08-30-12.jpg
@@ -296,6 +298,12 @@ def elabora(client, dal: date, al: date, filtro_progetti=None, tutti=False,
                 if avanzamento:
                     avanzamento(i, len(da_leggere), nome)
                 continue
+            # elementi creati da QField (layer, pk sul server): solo togliere questi riduce i km netti,
+            # le linee di base del progetto si possono cancellare o accorciare senza perdere km
+            creati = {((d.get("content") or {}).get("sourceLayerId") or (d.get("content") or {}).get("localLayerId") or "?",
+                       str((d.get("last_feedback") or {}).get("modified_pk")))
+                      for d in deltas if ((d.get("content") or {}).get("method") or "").lower() == "create"
+                      and (d.get("last_feedback") or {}).get("modified_pk") is not None}
             for d in deltas:
                 did = d.get("id")
                 if did:
@@ -320,6 +328,10 @@ def elabora(client, dal: date, al: date, filtro_progetti=None, tutti=False,
                 stato = (d.get("last_status") or d.get("status") or "").lower()
                 metodo = (c.get("method") or "").lower()
                 op = d.get("created_by") or "?"
+                # pk sul server dell'elemento toccato (sourcePk a volte manca, il riscontro del server no)
+                pk = (d.get("last_feedback") or {}).get("modified_pk")
+                pk = c.get("sourcePk") if pk is None else pk
+                base = pk not in (None, "") and (layer, str(pk)) not in creati
                 k = (giorno, op, nome, layer)
                 a = agg[k]
                 ultime_sync[k] = max(ultime_sync.get(k, quando), quando)
@@ -356,12 +368,16 @@ def elabora(client, dal: date, al: date, filtro_progetti=None, tutti=False,
                         km1, mq1, sc1 = misura(g_new)
                         km0, mq0, sc0 = misura(g_old)
                         if not (sc1 or sc0):
-                            a["km_netti"] += km1 - km0
+                            a["km_netti"] += max(km1 - km0, 0) if base else km1 - km0
+                            a["km_base"] += max(km0 - km1, 0) if base else 0
                             a["mq_netti"] += mq1 - mq0
                         scartate[nome] += sc1 or sc0
                 elif metodo == "delete":
                     km, mq, sc = misura(g_old)
-                    a["km_netti"] -= km
+                    if base:
+                        a["km_base"] += km
+                    else:
+                        a["km_netti"] -= km
                     a["mq_netti"] -= mq
                     a["cancellate"] += 1
                     scartate[nome] += sc
@@ -388,6 +404,7 @@ def elabora(client, dal: date, al: date, filtro_progetti=None, tutti=False,
         righe.append(dict(giorno=g.isoformat(), operatore=op, progetto=pr, layer=ly,
                           geom=geom_layer.get((pr, ly), ""),
                           km_netti=round(v["km_netti"], 4), km_nuovi=round(v["km_nuovi"], 4),
+                          km_base=round(v["km_base"], 4),
                           mq_netti=round(v["mq_netti"], 1), create=v["create"], punti=v["punti"],
                           modificate=v["modificate"], cancellate=v["cancellate"], problemi=v["problemi"],
                           foto=v["foto"], inizio=o and f"{o[0]:%H:%M}", fine=o and f"{o[1]:%H:%M}",
@@ -496,7 +513,8 @@ C_PR = ("progetto", "Progetto", "testo")
 C_LY = ("layer", "Layer", "testo")
 C_TIPO = ("tipo", "Tipo", "testo")
 C_MET = [("km_netti", "Km netti", "km"), ("km_nuovi", "Km nuovi", "km"), ("create", "Create", "int"),
-         ("punti", "di cui punti", "int"), ("modificate", "Modificate", "int"), ("cancellate", "Cancellate", "int")]
+         ("punti", "di cui punti", "int"), ("modificate", "Modificate", "int"), ("cancellate", "Cancellate", "int"),
+         ("km_base", "Km base rimossi", "km")]
 C_GG = [("giorni_attivi", "Giorni attivi", "int"), ("km_al_giorno", "Km/giorno", "dec")]
 C_ORARI = [("inizio", "Inizio (1a foto)", "ora"), ("fine", "Fine (ultima foto)", "ora"), ("ore", "Ore lavoro", "ore")]
 C_FOTO = [("foto", "Foto", "int")]
@@ -521,8 +539,11 @@ def scrivi_excel(ris, dal, al, out):
     foglio_info(wb, [
         ("Periodo", f"{dal:%d/%m/%Y} - {al:%d/%m/%Y} (giorno di sincronizzazione, ora italiana)"),
         ("Generato il", f"{adesso():%d/%m/%Y %H:%M}"),
-        ("Km netti", "linee nuove + allungamenti - accorciamenti - cancellazioni"),
+        ("Km netti", "linee nuove + allungamenti - accorciamenti - cancellazioni (si sottraggono solo "
+                     "accorciamenti e cancellazioni di linee create da QField)"),
         ("Km nuovi", "solo linee create nel periodo (lordo)"),
+        ("Km base rimossi", "linee di base del progetto (non create da QField) cancellate o accorciate: "
+                            "non si sottraggono dai km netti"),
         ("di cui punti", "elementi puntuali creati (es. nodi, pali, pozzetti, note), già compresi in Create"),
         ("Tipo", "geometria del layer (punto, linea, poligono); n.d. = tabella senza geometria o nessuna "
                  "geometria nei dati"),

@@ -484,7 +484,9 @@ da un giorno molto alto spesso vuol dire proprio questo. Gli orari sono in ora i
 <table>
   <thead><tr><th>Colonna</th><th>Cosa significa</th></tr></thead>
   <tbody>
-    <tr><td><b>Km netti</b></td><td>Quanta rete è stata <b>effettivamente aggiunta</b>: linee nuove + allungamenti − accorciamenti − linee cancellate. È il dato di produzione principale.</td></tr>
+    <tr><td><b>Km netti</b></td><td>Quanta rete è stata <b>effettivamente aggiunta</b>: linee nuove + allungamenti − accorciamenti − linee cancellate. È il dato di produzione principale.
+      Accorciamenti e cancellazioni si sottraggono solo per le linee <b>create da QField</b> (rifare il proprio lavoro toglie i km già contati);
+      le linee di base già presenti nel progetto si possono cancellare o accorciare senza perdere km. Passa il mouse sul valore per vedere i km di base rimossi.</td></tr>
     <tr><td><b>Km nuovi</b></td><td>Lunghezza delle sole <b>linee create</b>: la produzione "lorda", senza tener conto di modifiche e cancellazioni.</td></tr>
     <tr><td><b>Create</b></td><td>Quanti elementi sono stati creati: linee, punti (es. pozzetti, pali) e poligoni.</td></tr>
     <tr><td><b>di cui punti</b></td><td>Quanti degli elementi creati sono <b>puntuali</b> (nodi, pali, pozzetti, note…): sono già compresi in Create. Passa il mouse sul numero per vederli divisi per layer.</td></tr>
@@ -508,7 +510,7 @@ Risultato: <b>Km nuovi = 3,00</b> (solo il punto 1) · <b>Km netti = 3,00 + 0,20
 <ul>
   <li><b>Km netti vicini ai km nuovi</b>: l'operatore ha disegnato e quasi nulla è stato rifatto.</li>
   <li><b>Km nuovi molto più alti dei km netti</b>: molto lavoro è stato cancellato o accorciato. Possibili correzioni o rilavorazioni da verificare.</li>
-  <li><b>Km netti negativi (in rosso)</b>: in quella riga si è tolta più rete di quanta ne sia stata disegnata, ad esempio una pulizia di linee errate.</li>
+  <li><b>Km netti negativi (in rosso)</b>: in quella riga si è tolta più rete disegnata in QField di quanta ne sia stata aggiunta, ad esempio rifacendo linee dei giorni precedenti.</li>
   <li><b>Km a zero ma con elementi creati o modificati</b>: l'operatore ha lavorato su punti (che non hanno lunghezza) o solo sugli attributi.</li>
   <li>I km contano <b>solo le linee</b>: punti e poligoni compaiono nelle colonne Create/Modificate/Cancellate ma non nei km.</li>
 </ul>
@@ -678,7 +680,7 @@ const COL = {
   progetto:     {l:"Progetto",      t:"testo", d:"Progetto QFieldCloud in cui sono state fatte le modifiche."},
   layer:        {l:"Layer",         t:"testo", d:"Strato del progetto (nome interno di QGIS) in cui sono state fatte le modifiche."},
   tipo:         {l:"Tipo",          t:"testo", d:"Geometria del layer: <span class='geo punto'></span>punto, <span class='geo linea'></span>linea o <span class='geo poligono'></span>poligono. <b>n.d.</b> = tabella senza geometria o layer con sole modifiche agli attributi."},
-  km_netti:     {l:"Km netti",      t:"km", bar:true, d:"Rete <b>effettivamente aggiunta</b>: linee nuove + allungamenti − accorciamenti − linee cancellate. È il dato di produzione principale; in rosso se negativo."},
+  km_netti:     {l:"Km netti",      t:"km", bar:true, d:"Rete <b>effettivamente aggiunta</b>: linee nuove + allungamenti − accorciamenti − linee cancellate. Si sottraggono solo le linee create da QField, non quelle di base del progetto. È il dato di produzione principale; in rosso se negativo."},
   km_nuovi:     {l:"Km nuovi",      t:"km",    d:"Lunghezza delle sole <b>linee create</b> (produzione lorda), senza contare modifiche e cancellazioni."},
   create:       {l:"Create",        t:"int",   d:"Elementi creati: linee, punti e poligoni."},
   punti:        {l:"di cui punti",  t:"int",   d:"Elementi <b>puntuali</b> creati (nodi, pali, pozzetti, note…), già compresi in Create. Passa il mouse sul numero per vederli divisi per layer."},
@@ -1044,7 +1046,7 @@ function renderPay(src) {
   const attr = s => s.altri ? "" : ` data-g="progetto" data-v="${esc(s.k)}"`;
   $("pay").innerHTML = `<div>
       <div class="pay-lab">Compenso stimato</div>
-      <div class="pay-val${eur < -0.5 ? " neg" : ""}" data-tip="${esc(`<b>${EUR2.format(eur)}</b><br>${F.km.format(kn)} km netti × ${EUR.format(TARIFFA_KM)} al km.<div class='hint'>Calcolato su quello che vedi in tabella (periodo, vista e filtri attuali). Si pagano i km netti: le linee cancellate o accorciate si sottraggono.</div>`)}">${EUR.format(eur)}</div>
+      <div class="pay-val${eur < -0.5 ? " neg" : ""}" data-tip="${esc(`<b>${EUR2.format(eur)}</b><br>${F.km.format(kn)} km netti × ${EUR.format(TARIFFA_KM)} al km.<div class='hint'>Calcolato su quello che vedi in tabella (periodo, vista e filtri attuali). Si pagano i km netti: le linee create da QField e poi cancellate o accorciate si sottraggono, la rete di base del progetto no.</div>`)}">${EUR.format(eur)}</div>
       <div class="pay-f"><b>${F.km.format(kn)} km</b> netti × <b>${EUR.format(TARIFFA_KM)}</b>/km</div>
     </div>
     <div>
@@ -1197,11 +1199,14 @@ function contesto(r) {
   ["operatore","progetto","layer"].forEach(k => VISTE[ui.vista].key.includes(k) && p.push(esc(r[k])));
   return `<div class="ctx">${p.join(" · ")}</div>`;
 }
-function spiegaKm(kn, kv) {
+// km di linee di base del progetto (non create da QField) cancellate o accorciate: non tolti dai km netti
+const kmBase = r => (r._src || []).reduce((s, x) => s + (x.km_base || 0), 0);
+function spiegaKm(kn, kv, kb) {
   const d = kn - kv;
   let s = `<div class="big">${F.km.format(kn)} km netti</div>`;
   if (Math.abs(d) < 0.0005) s += `Tutti da linee nuove (${F.km.format(kv)} km), nessuna modifica di lunghezza o cancellazione.`;
   else s += `= ${F.km.format(kv)} km di linee nuove ${d > 0 ? "+" : "−"} ${F.km.format(Math.abs(d))} km ${d > 0 ? "da allungamenti di linee esistenti" : "tolti da accorciamenti e cancellazioni"}.`;
+  if (kb > 0.0005) s += `<br>Rete di base del progetto rimossa (cancellata o accorciata): <b>${F.km.format(kb)} km</b>, non sottratti.`;
   if (kn < -0.0005) s += `<div class="hint">Negativo: qui si è tolta più rete di quanta ne sia stata disegnata.</div>`;
   else if (Math.abs(kn) < 0.0005 && kv < 0.0005) s += `<div class="hint">Nessun km: probabilmente lavoro su punti o solo sugli attributi.</div>`;
   return s;
@@ -1222,7 +1227,7 @@ function tipValore(k, r, tot) {
                              (r._g && ui.vista !== "dettaglio" ? `<br>Giorni attivi: ${r._g.size}` : "");
     case "progetto":  return `<div class="big">${esc(v)}</div>Progetto QFieldCloud.` + (r._o ? `<br>Operatori: ${elenco(r._o)}` : "");
     case "layer":     return `<div class="big">${esc(v)}</div>Layer QGIS. Nome completo: ${elenco(new Set((r._src || []).map(x => x.layer_id)), 3)}` + (r._o ? `<br>Operatori: ${elenco(r._o)}` : "");
-    case "km_netti":  return spiegaKm(r.km_netti, r.km_nuovi);
+    case "km_netti":  return spiegaKm(r.km_netti, r.km_nuovi, kmBase(r));
     case "km_nuovi":  return `<div class="big">${F.km.format(v)} km nuovi</div>Lunghezza delle linee create ${ogg}. Gli elementi creati sono ${F.int.format(r.create)} (compresi eventuali punti e poligoni, che non hanno km).`;
     case "create":    return `<div class="big">${plur(v, "elemento creato", "elementi creati")}</div>Linee, punti e poligoni nuovi` + (r.punti ? `, di cui <b>${plur(r.punti, "punto", "punti")}</b>.` : ".") +
                              (v && r._src && perLayer(r._src).length > 1 ? `<br>${elencoLayer(r._src, "create")}` : "");
@@ -1232,7 +1237,8 @@ function tipValore(k, r, tot) {
                              linea:"Layer di <b>linee</b>: la lunghezza va nei km.", poligono:"Layer di <b>poligoni</b>: si contano gli elementi, non i km."}[r.geom] ||
                              "Geometria non rilevata: tabella senza geometria (es. elenco delle tipologie) o layer con sole modifiche agli attributi.");
     case "modificate":return `<div class="big">${plur(v, "modifica", "modifiche")}</div>Modifiche sincronizzate alla geometria o agli attributi. Lo stesso elemento può contare più volte.`;
-    case "cancellate":return `<div class="big">${plur(v, "elemento cancellato", "elementi cancellati")}</div>` + (v ? "Le linee cancellate vengono sottratte dai km netti." : "");
+    case "cancellate":return `<div class="big">${plur(v, "elemento cancellato", "elementi cancellati")}</div>` + (v ? "Le linee create da QField e poi cancellate vengono sottratte dai km netti, quelle di base del progetto no." +
+                             (kmBase(r) > 0.0005 ? `<br>Rete di base rimossa: <b>${F.km.format(kmBase(r))} km</b>.` : "") : "");
     case "giorni_attivi": { const g = [...(r._g || [])].sort();
       return `<div class="big">${plur(v, "giorno attivo", "giorni attivi")}</div>` + (g.length ? `Dal ${dLab(g[0])} al ${dLab(g[g.length - 1])}.` : ""); }
     case "km_al_giorno": return `<div class="big">${F.dec.format(v)} km al giorno</div>${F.km.format(r.km_netti)} km netti ÷ ${plur(r.giorni_attivi, "giorno attivo", "giorni attivi")}.`;
