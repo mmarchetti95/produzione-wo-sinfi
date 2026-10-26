@@ -73,7 +73,7 @@ code{font-family:Consolas,"Cascadia Mono",monospace;font-size:.92em;background:v
 .layer-pill .pill-count{background:rgba(255,255,255,.08);border-radius:10px;padding:1px 7px;font-size:11px;margin-left:2px;font-variant-numeric:tabular-nums}
 
 /* KPI */
-.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(136px,1fr));gap:12px;margin-bottom:20px}
 .kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;cursor:help;transition:border-color .15s}
 .kpi:hover{border-color:var(--border2)}
 .kpi-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
@@ -81,6 +81,27 @@ code{font-family:Consolas,"Cascadia Mono",monospace;font-size:.92em;background:v
 .kpi-value small{font-size:13px;font-weight:600;color:var(--muted);margin-left:3px;letter-spacing:0}
 .kpi-value.green{color:var(--accent-h)} .kpi-value.blue{color:var(--blue)} .kpi-value.purple{color:var(--purple)}
 .kpi-value.orange{color:var(--orange)} .kpi-value.teal{color:var(--teal)} .kpi-value.punto{color:var(--g-punto)}
+
+/* COMPENSO (km netti x tariffa) */
+.pay{background:linear-gradient(135deg,rgba(46,160,67,.1),rgba(46,160,67,.02));border:1px solid rgba(46,160,67,.35);border-radius:var(--radius);padding:16px 18px;margin-bottom:20px;display:grid;grid-template-columns:minmax(230px,auto) minmax(0,1fr);gap:14px 32px;align-items:center}
+@media(max-width:720px){.pay{grid-template-columns:1fr}}
+.pay-lab{font-size:11px;font-weight:700;color:var(--accent-h);text-transform:uppercase;letter-spacing:.07em}
+.pay-val{font-size:34px;font-weight:800;letter-spacing:-.02em;line-height:1.15;margin-top:2px;font-variant-numeric:tabular-nums;cursor:help}
+.pay-val.neg{color:var(--red)}
+.pay-f{font-size:12px;color:var(--muted);margin-top:3px;font-variant-numeric:tabular-nums}
+.pay-f b{color:var(--text)}
+.pay-stats{display:flex;gap:10px 28px;flex-wrap:wrap}
+.pay-stat{cursor:help}
+.pay-stat span{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.pay-stat b{font-size:17px;font-weight:700;font-variant-numeric:tabular-nums}
+.pay-stack{display:flex;gap:2px;height:14px;margin-top:14px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden}
+.pay-stack i{display:block;height:100%;min-width:3px;cursor:pointer;transition:opacity .15s}
+.pay-stack i:hover{opacity:.8}
+.pay-leg{display:flex;flex-wrap:wrap;gap:4px 16px;margin-top:8px;font-size:12px;color:var(--muted)}
+.pay-leg span{display:inline-flex;align-items:center;gap:6px;cursor:pointer;white-space:nowrap}
+.pay-leg span:hover{color:var(--text)}
+.pay-leg .sw{width:9px;height:9px;border-radius:2px;flex:none}
+.pay-leg b{color:var(--text);font-weight:600;font-variant-numeric:tabular-nums}
 
 /* MAIN GRID */
 .main-grid{display:grid;grid-template-columns:280px minmax(0,1fr);gap:16px;align-items:start;margin-bottom:20px}
@@ -309,6 +330,7 @@ dialog.guida::backdrop{background:rgba(1,4,9,.7)}
     </section>
     <div id="layer-pills"></div>
     <section class="kpis" id="kpis"></section>
+    <section class="pay" id="pay" aria-label="Compenso stimato"></section>
 
     <div class="main-grid">
       <aside class="filter-panel">
@@ -381,7 +403,7 @@ dialog.guida::backdrop{background:rgba(1,4,9,.7)}
     <p class="note">
       <b>Km netti</b> = linee nuove + allungamenti − accorciamenti − cancellazioni · <b>Km nuovi</b> = solo linee create ·
       <b>di cui punti</b> = elementi puntuali creati (nodi, pali, pozzetti, note) ·
-      <b>Inizio / Fine</b> = prima e ultima foto della giornata ·
+      <b>Inizio / Fine</b> = prima e ultima foto della giornata · <b>Compenso</b> = km netti × 204 €/km ·
       i giorni sono quelli di <b>sincronizzazione</b> (ora italiana), per le foto quelli di scatto. Passa il mouse su riquadri, grafici e celle per i dettagli,
       oppure apri la <button class="linkbtn" id="bGuida2">Guida</button>.
     </p>
@@ -445,6 +467,7 @@ da un giorno molto alto spesso vuol dire proprio questo. Gli orari sono in ora i
     <tr><td><b>Foto</b></td><td>Quante foto sono state scattate. Ogni foto conta una volta sola.</td></tr>
     <tr><td><b>Giorni attivi</b></td><td>In quanti giorni diversi c'è stata almeno una sincronizzazione.</td></tr>
     <tr><td><b>Km/giorno</b></td><td>Km netti ÷ giorni attivi: la resa media in un giorno di lavoro.</td></tr>
+    <tr><td><b>Ultima sync</b></td><td>Nelle viste Per operatore e Per progetto: data e ora dell'<b>ultima sincronizzazione</b> nel periodo.</td></tr>
     <tr><td><b>Operatori / Progetti</b></td><td>Quanti operatori o progetti diversi sono coinvolti in quella riga. Passa il mouse sul numero per vedere i nomi.</td></tr>
   </tbody>
 </table>
@@ -473,7 +496,17 @@ Per questo:</p>
 </ul>
 <h4>I riquadri in alto</h4>
 <p>Riassumono <b>quello che vedi in tabella</b>, quindi cambiano con la vista e con i filtri. <b>Ore lavoro</b> = per ogni operatore e giorno, il tempo tra la prima e l'ultima foto su tutti i progetti, sommato. <b>Km medi operatore/giorno</b> = km netti ÷ giornate-operatore,
-dove una giornata-operatore è un operatore che ha sincronizzato in un certo giorno (3 operatori per 2 giorni = 6 giornate).</p>
+dove una giornata-operatore è un operatore che ha sincronizzato in un certo giorno (3 operatori per 2 giorni = 6 giornate).
+<b>Ultima sincronizzazione</b> = data e ora dell'ultimo invio di modifiche da QField a QFieldCloud tra le righe a schermo; passa il mouse per vederla progetto per progetto.
+Non va confusa con l'aggiornamento della board (accanto al titolo), che indica quando i dati sono stati letti da QFieldCloud.</p>
+<h4>Compenso stimato</h4>
+<p>Il riquadro verde sotto i riquadri calcola quanto viene pagato il lavoro a schermo: <b>km netti × 204 € al km</b>. Come i riquadri, segue periodo, vista e filtri.</p>
+<ul>
+  <li><b>Per giornata-operatore</b>, <b>per ora di lavoro</b> e <b>media al giorno</b> dividono il compenso per le giornate-operatore, per le ore lavoro (prima → ultima foto) e per i giorni con attività.</li>
+  <li><b>Sui km nuovi (lordo)</b>: quanto varrebbero tutte le linee create; la differenza con il compenso è il valore perso in accorciamenti e cancellazioni.</li>
+  <li>La <b>barra colorata</b> divide il compenso per progetto. I 5 progetti con più km nello storico hanno sempre lo stesso colore, gli altri sono raggruppati in grigio. Clic su un progetto per filtrare tutta la board.</li>
+</ul>
+<div class="esempio"><b>Esempio.</b> 2,70 km netti × 204 € = <b>550,80 €</b>. Se lo stesso giorno sono state cancellate linee per 0,30 km, i km nuovi valgono 3,00 × 204 = 612 € e la differenza (61,20 €) è il lavoro rifatto.</div>
 <h4>I grafici</h4>
 <p>I quattro grafici a barre mostrano i primi 8 valori del periodo: km netti per operatore, <b>ore lavoro</b> per operatore (prima → ultima foto di ogni giornata),
 elementi creati per layer e km netti per progetto. Passa il mouse su una barra per i dettagli.</p>
@@ -616,14 +649,15 @@ const COL = {
   km_al_giorno: {l:"Km/giorno",     t:"dec",   d:"Km netti ÷ giorni attivi: la resa media in un giorno di lavoro."},
   n_operatori:  {l:"Operatori",     t:"int",   d:"Quanti operatori diversi hanno lavorato. Passa il mouse sul numero per i nomi."},
   n_progetti:   {l:"Progetti",      t:"int",   d:"Su quanti progetti diversi si è lavorato. Passa il mouse sul numero per i nomi."},
+  ultima:       {l:"Ultima sync",   t:"dataora", d:"Data e ora dell'<b>ultima sincronizzazione</b> su QFieldCloud nel periodo (ora italiana)."},
 };
 const MET = ["km_netti","km_nuovi","create","punti","modificate","cancellate"];
 const VISTE = {
   dettaglio: {l:"Dettaglio",     key:["giorno","operatore","progetto"], extra:["foto"], sort:[["giorno",-1],["km_netti",-1]],
               d:"Una riga per giorno + operatore + progetto, con orario di inizio e fine (prima e ultima foto). Ordinata per giorno, mostra un separatore con i totali di ogni giornata. Clic su una riga per vederla divisa per layer."},
-  operatore: {l:"Per operatore", key:["operatore"], extra:["foto","giorni_attivi","km_al_giorno","n_progetti"], sort:[["km_netti",-1]],
+  operatore: {l:"Per operatore", key:["operatore"], extra:["foto","giorni_attivi","km_al_giorno","n_progetti","ultima"], sort:[["km_netti",-1]],
               d:"Una riga per operatore: totale del periodo, giorni attivi e resa media al giorno."},
-  progetto:  {l:"Per progetto",  key:["progetto"],  extra:["foto","giorni_attivi","n_operatori"], sort:[["km_netti",-1]],
+  progetto:  {l:"Per progetto",  key:["progetto"],  extra:["foto","giorni_attivi","n_operatori","ultima"], sort:[["km_netti",-1]],
               d:"Una riga per progetto: avanzamento di ogni cantiere nel periodo."},
   giorno:    {l:"Per giorno",    key:["giorno"],    extra:["foto","n_operatori","n_progetti"], sort:[["giorno",-1]],
               d:"Una riga per giorno: andamento quotidiano di tutta la squadra, con la prima e l'ultima foto della giornata."},
@@ -639,13 +673,17 @@ const geoL = g => (GEO[g] || GEO[""]).l;
 // inizio/fine/ore hanno senso solo nelle viste con una riga per giorno
 const colonne = v => [...VISTE[v].key, ...(VISTE[v].key.includes("layer") ? ["tipo"] : []),
   ...(VISTE[v].key.includes("giorno") ? ["inizio","fine","ore"] : []), ...MET, ...VISTE[v].extra];
-const isNum = k => !["testo","data","ora"].includes(COL[k].t);
+const isNum = k => !["testo","data","ora","dataora"].includes(COL[k].t);
 const aDestra = k => isNum(k) || COL[k].t === "ora";
 // la riga contiene lavoro sincronizzato (non solo foto scattate quel giorno e sincronizzate dopo)
 const sincr = r => MET.some(m => r[m]) || r.problemi > 0;
+const ultimaSync = r => r.sync ? `${r.giorno} ${r.sync}` : "";
 const minOra = (a, b) => !a ? b : !b ? a : a < b ? a : b;
 const maxOra = (a, b) => !a ? b : !b ? a : a > b ? a : b;
 const minuti = s => { const m = String(s ?? "").trim().match(/^(\d{1,2})(?::(\d{2}))?$/); return m ? m[1] * 60 + Number(m[2] || 0) : NaN; };
+// "2026-10-26 14:32" (giorno + orario dell'ultima sincronizzazione)
+const dtLab = v => `${dLab(v.slice(0, 10))} ${v.slice(11)}`;
+const fa = iso => { const n = giorniTra(iso, dIso(new Date())) - 1; return n <= 0 ? "oggi" : n === 1 ? "ieri" : `${n} giorni fa`; };
 const durata = (da, a) => { const d = minuti(a) - minuti(da); return `${Math.floor(d / 60)} h ${String(d % 60).padStart(2, "0")} min`; };
 
 /* ---------- stato UI (vista e ordinamento ricordati nel browser) ---------- */
@@ -719,7 +757,7 @@ function matchOra(v, f) {
   if ((m = f.match(/^(>=|<=|>|<)\s*(.+)$/)) && !isNaN(minuti(m[2]))) { const n = minuti(m[2]); return {">=":x>=n, "<=":x<=n, ">":x>n, "<":x<n}[m[1]]; }
   return matchTesto(v, f);
 }
-function testoCella(k, v) { return COL[k].t === "data" ? dLab(v) : v; }
+function testoCella(k, v) { return COL[k].t === "data" ? dLab(v) : COL[k].t === "dataora" ? (v ? dtLab(v) : "") : v; }
 
 /* ---------- calcolo ---------- */
 function righeBase(salta) {
@@ -733,9 +771,9 @@ function aggrega(R, vista) {
   for (const r of R) {
     const k = V.key.map(c => r[c]).join("\u0001");
     let a = acc.get(k);
-    if (!a) { a = {_src:[], _g:new Set(), _o:new Set(), _p:new Set(), _l:new Set(), foto:0, inizio:"", fine:"", geom:""}; V.key.forEach(c => a[c] = r[c]); MET.forEach(m => a[m] = 0); acc.set(k, a); }
+    if (!a) { a = {_src:[], _g:new Set(), _o:new Set(), _p:new Set(), _l:new Set(), foto:0, inizio:"", fine:"", ultima:"", geom:""}; V.key.forEach(c => a[c] = r[c]); MET.forEach(m => a[m] = 0); acc.set(k, a); }
     MET.forEach(m => a[m] += r[m]); a.geom ||= r.geom;
-    a.foto += r.foto; a.inizio = minOra(a.inizio, r.inizio); a.fine = maxOra(a.fine, r.fine);
+    a.foto += r.foto; a.inizio = minOra(a.inizio, r.inizio); a.fine = maxOra(a.fine, r.fine); a.ultima = maxOra(a.ultima, ultimaSync(r));
     a._src.push(r); if (sincr(r)) a._g.add(r.giorno); a._o.add(r.operatore); a._p.add(r.progetto); a._l.add(r.layer);
   }
   for (const a of acc.values()) {
@@ -797,6 +835,7 @@ function fmt(k, v) {
   const t = COL[k].t;
   if (t === "data") return dLab(v);
   if (t === "ora") return v || "–";
+  if (t === "dataora") return v ? dtLab(v) : "–";
   if (v == null) return "–";
   if (t === "testo") return esc(v);
   return F[t].format(v);
@@ -809,7 +848,7 @@ function renderHead() {
     return `<th data-k="${k}" class="${aDestra(k) ? "num" : ""}" aria-sort="${dir > 0 ? "ascending" : dir < 0 ? "descending" : "none"}">${aDestra(k) ? ar + COL[k].l : COL[k].l + " " + ar}</th>`;
   }).join("");
   const f = COLS.map(k => {
-    const ph = COL[k].t === "ore" ? "es. >8" : isNum(k) ? "es. >0" : COL[k].t === "data" ? "es. 12/10, lun" : COL[k].t === "ora" ? "es. <8:00" : "filtra…";
+    const ph = COL[k].t === "ore" ? "es. >8" : isNum(k) ? "es. >0" : ["data","dataora"].includes(COL[k].t) ? "es. 12/10, lun" : COL[k].t === "ora" ? "es. <8:00" : "filtra…";
     return `<th><input data-f="${k}" class="${fv[k] ? "on" : ""}" value="${esc(fv[k]||"")}" placeholder="${ph}" aria-label="Filtro ${COL[k].l}" ${aDestra(k) ? 'style="text-align:right"' : ""}></th>`;
   }).join("");
   $("th").innerHTML = `<tr class="h">${h}</tr><tr class="f">${f}</tr>`;
@@ -821,7 +860,7 @@ function cella(r, k, i, maxKm, nascondiGiorno) {
   if (aDestra(k)) cls += " num";
   if (typeof v === "number" && v < -0.0005) cls += " neg";
   if (typeof v === "number" && Math.abs(v) < 0.0005 && k !== "km_netti") cls += " dim";
-  if ((t === "ora" && !v) || v == null) cls += " dim";
+  if ((["ora","dataora"].includes(t) && !v) || v == null) cls += " dim";
   if (nascondiGiorno && k === "giorno") cls += " gday";
   let html = fmt(k, v);
   if (COL[k].bar) html = `<span class="kb"><i style="width:${(Math.max(0, v) / maxKm * 100).toFixed(1)}%"></i></span>${html}`;
@@ -882,6 +921,7 @@ function renderBody() {
   TOT.foto = VISIBILI.reduce((s, r) => s + r.foto, 0);
   TOT.inizio = VISIBILI.reduce((s, r) => minOra(s, r.inizio), ""); TOT.fine = VISIBILI.reduce((s, r) => maxOra(s, r.fine), "");
   TOT.ore = VISIBILI.some(r => r.ore != null) ? VISIBILI.reduce((s, r) => s + (r.ore || 0), 0) : null;
+  TOT.ultima = VISIBILI.reduce((s, r) => maxOra(s, r.ultima || ""), "");
   TOT.giorni_attivi = TOT._g.size; TOT.km_al_giorno = TOT._g.size ? TOT.km_netti / TOT._g.size : 0;
   TOT.n_operatori = TOT._o.size; TOT.n_progetti = TOT._p.size;
   const nk = VISTE[ui.vista].key.length;
@@ -917,8 +957,68 @@ function renderKpi(src) {
     ["Km operatore/giorno", F.dec.format(gOp ? kn / gOp : 0), "km", "blue",
       `<b>Resa media di un operatore in un giorno di lavoro.</b><br>${F.km.format(kn)} km netti ÷ ${plur(gOp, "giornata-operatore", "giornate-operatore")}.<div class='hint'>Una giornata-operatore = un operatore che ha sincronizzato in un giorno (3 operatori per 2 giorni = 6).</div>`],
     ["Progetti", F.int.format(prj.size), "", "green", prj.size ? `<b>Progetti con attività:</b><br>${elenco(prj, 20)}` : "Nessun progetto"],
+    ultimaKpi(src),
   ];
   $("kpis").innerHTML = k.map(([l, v, u, c, t]) => `<div class="kpi" data-tip="${esc(t)}"><div class="kpi-label">${l}</div><div class="kpi-value ${c}">${v}${u ? `<small>${u}</small>` : ""}</div></div>`).join("");
+}
+// ultima sincronizzazione delle righe a schermo, con l'elenco per progetto nel tooltip
+function ultimaKpi(src) {
+  const per = new Map();
+  for (const r of src) { const u = ultimaSync(r); if (u) per.set(r.progetto, maxOra(per.get(r.progetto), u)); }
+  const L = [...per.entries()].sort((x, y) => y[1].localeCompare(x[1])), u = L.length ? L[0][1] : "";
+  if (!u) return ["Ultima sincronizzazione", "–", "", "", "Nessuna sincronizzazione nel periodo."];
+  return ["Ultima sincronizzazione", dIt(u.slice(0, 10)).slice(0, 5), u.slice(11), "",
+    `<b>Ultima sincronizzazione: ${dLungo(u.slice(0, 10))} alle ${u.slice(11)}</b> (${fa(u.slice(0, 10))}).<br>Ultima per progetto:<br>` +
+    L.slice(0, 12).map(([p, v]) => `${esc(p)} <b>${dtLab(v)}</b>`).join("<br>") + (L.length > 12 ? `<br>e altri ${L.length - 12}` : "") +
+    "<div class='hint'>Ultimo invio di modifiche da QField a QFieldCloud (ora italiana), nel periodo e con i filtri attuali. Non è l'aggiornamento della board, indicato in alto accanto al titolo.</div>"];
+}
+
+/* ---------- compenso: km netti x tariffa ---------- */
+const TARIFFA_KM = 204;  // € per km netto
+const EUR = new Intl.NumberFormat("it-IT", {style:"currency", currency:"EUR", maximumFractionDigits:0});
+const EUR2 = new Intl.NumberFormat("it-IT", {style:"currency", currency:"EUR", minimumFractionDigits:2, maximumFractionDigits:2});
+// colori fissi per i 5 progetti con più km netti nello storico (il colore segue il progetto, non la posizione); gli altri in grigio
+const PAL_PROG = ["#3d8fe6", "#2ea043", "#9a63f0", "#b98318", "#e0609f"], COL_ALTRI = "#484f58";
+let COL_PROG = new Map();
+function coloriProgetti() {
+  const km = new Map();
+  DATI.righe.forEach(r => km.set(r.progetto, (km.get(r.progetto) || 0) + r.km_netti));
+  COL_PROG = new Map([...km.entries()].filter(([, v]) => v > 0).sort((x, y) => y[1] - x[1]).slice(0, PAL_PROG.length).map(([p], i) => [p, PAL_PROG[i]]));
+}
+function renderPay(src) {
+  const kn = src.reduce((a, r) => a + r.km_netti, 0), kv = src.reduce((a, r) => a + r.km_nuovi, 0), eur = kn * TARIFFA_KM;
+  const gOp = new Set(src.filter(sincr).map(r => r.operatore + "|" + r.giorno)).size, gg = new Set(src.filter(sincr).map(r => r.giorno)).size;
+  const ore = giornateOp(src).reduce((a, o) => a + o.ore, 0);
+  const stat = (l, v, t) => `<div class="pay-stat" data-tip="${esc(t)}"><span>${l}</span><b>${v}</b></div>`;
+  // ripartizione per progetto: i progetti senza colore fisso finiscono in "Altri"
+  const per = new Map();
+  for (const r of src) per.set(r.progetto, (per.get(r.progetto) || 0) + r.km_netti);
+  const seg = [], altri = {k:"", km:0, n:0};
+  for (const [p, km] of per) if (km > 0) {
+    if (COL_PROG.has(p)) seg.push({k:p, km, col:COL_PROG.get(p)}); else { altri.km += km; altri.n++; altri.k = p; }
+  }
+  seg.sort((x, y) => y.km - x.km);
+  if (altri.n) seg.push(altri.n === 1 ? {k:altri.k, km:altri.km, col:COL_ALTRI} : {k:`Altri ${altri.n} progetti`, km:altri.km, col:COL_ALTRI, altri:true});
+  const pos = seg.reduce((a, s) => a + s.km, 0);
+  const tipSeg = s => esc(`<b>${esc(s.k)}</b><br>${EUR.format(s.km * TARIFFA_KM)} · ${F.km.format(s.km)} km netti · ${F.dec.format(s.km / pos * 100)}% del compenso` +
+    (s.altri ? "" : `<div class='hint'>${ui.f.progetto === s.k ? "Clic per togliere il filtro" : "Clic per vedere solo questo progetto"}</div>`));
+  const attr = s => s.altri ? "" : ` data-g="progetto" data-v="${esc(s.k)}"`;
+  $("pay").innerHTML = `<div>
+      <div class="pay-lab">Compenso stimato</div>
+      <div class="pay-val${eur < -0.5 ? " neg" : ""}" data-tip="${esc(`<b>${EUR2.format(eur)}</b><br>${F.km.format(kn)} km netti × ${EUR.format(TARIFFA_KM)} al km.<div class='hint'>Calcolato su quello che vedi in tabella (periodo, vista e filtri attuali). Si pagano i km netti: le linee cancellate o accorciate si sottraggono.</div>`)}">${EUR.format(eur)}</div>
+      <div class="pay-f"><b>${F.km.format(kn)} km</b> netti × <b>${EUR.format(TARIFFA_KM)}</b>/km</div>
+    </div>
+    <div>
+      <div class="pay-stats">` +
+        stat("Per giornata-operatore", gOp ? EUR.format(eur / gOp) : "–", `<b>Compenso medio di un operatore in un giorno di lavoro</b><br>${EUR.format(eur)} ÷ ${plur(gOp, "giornata-operatore", "giornate-operatore")}.`) +
+        stat("Per ora di lavoro", ore > 0 ? EUR.format(eur / ore) : "–", `<b>Compenso per ora lavorata</b><br>${EUR.format(eur)} ÷ ${fmtOre(ore)} ore lavoro (dalla prima all'ultima foto di ogni giornata).<div class='hint'>Le giornate senza foto non hanno ore: se sono tante, il valore risulta più alto del reale.</div>`) +
+        stat("Media al giorno", gg ? EUR.format(eur / gg) : "–", `<b>Compenso medio di tutta la squadra in un giorno attivo</b><br>${EUR.format(eur)} ÷ ${plur(gg, "giorno", "giorni")} con almeno una sincronizzazione.`) +
+        stat("Sui km nuovi (lordo)", EUR.format(kv * TARIFFA_KM), `<b>Se si pagassero tutte le linee create</b><br>${F.km.format(kv)} km nuovi × ${EUR.format(TARIFFA_KM)}.` +
+          (kv - kn > 0.0005 ? `<br>Differenza con il compenso: <b>${EUR.format((kv - kn) * TARIFFA_KM)}</b> persi in accorciamenti e cancellazioni.` : "")) +
+      `</div>` +
+      (pos > 0 ? `<div class="pay-stack" role="img" aria-label="Compenso per progetto">${seg.map(s => `<i style="width:${(s.km / pos * 100).toFixed(2)}%;background:${s.col}"${attr(s)} data-tip="${tipSeg(s)}"></i>`).join("")}</div>
+      <div class="pay-leg">${seg.map(s => `<span${attr(s)} data-tip="${tipSeg(s)}"><i class="sw" style="background:${s.col}"></i>${esc(s.k)} <b>${EUR.format(s.km * TARIFFA_KM)}</b></span>`).join("")}</div>` : "") +
+    `</div>`;
 }
 // pillole dei layer: i più usati nel periodo (conteggio = elementi creati), clic = filtro Layer
 const MAX_PILLOLE = 12;
@@ -1021,7 +1121,7 @@ function render(soloCorpo) {
   $("lLayer").hidden = ui.vista !== "dettaglio";
   if (!soloCorpo) renderHead();
   const src = renderBody();
-  renderKpi(src); renderPills(); renderBarre(src); renderChart(righeGrafico()); renderInfo();
+  renderKpi(src); renderPay(src); renderPills(); renderBarre(src); renderChart(righeGrafico()); renderInfo();
   $("bReset").disabled = !(ui.periodo !== PERIODO_DEF || ui.q || Object.values(ui.f).some(Boolean) || Object.values(ui.filtri[ui.vista] || {}).some(Boolean));
 }
 function descrizioneFiltri() {
@@ -1038,6 +1138,7 @@ function descrizioneFiltri() {
 const H = {
   testo: "Scrivi parte del nome. Più valori separati da virgola = uno qualsiasi (es. <code>rperri, hsemry</code>). Con <code>!</code> escludi (es. <code>!test</code>).",
   data: "Scrivi parte della data o del giorno: <code>12/10</code> (un giorno), <code>/10/</code> (tutto ottobre), <code>sab</code> (tutti i sabati).",
+  dataora: "Scrivi parte della data o dell'ora: <code>26/10</code> (un giorno), <code>/10/</code> (tutto ottobre), <code>lun</code> (i lunedì), <code>14:</code> (tra le 14 e le 15).",
   num: "<code>&gt;5</code> maggiore di 5 · <code>&lt;0</code> negativi · <code>2..10</code> tra 2 e 10 · <code>0</code> uguale a zero · <code>!=0</code> diverso da zero. Decimali con la virgola.",
   ora: "<code>&lt;8</code> prima delle 8 · <code>&gt;=17:30</code> dalle 17:30 in poi · <code>7..9</code> tra le 7 e le 9. Ore e minuti con i due punti.",
   ore: "<code>&gt;8</code> più di 8 ore · <code>&lt;4</code> meno di 4 ore · <code>6..8</code> tra 6 e 8 ore · <code>7,5</code> = 7 ore e 30 minuti.",
@@ -1094,6 +1195,8 @@ function tipValore(k, r, tot) {
       return `<div class="big">${plur(v, "giorno attivo", "giorni attivi")}</div>` + (g.length ? `Dal ${dLab(g[0])} al ${dLab(g[g.length - 1])}.` : ""); }
     case "km_al_giorno": return `<div class="big">${F.dec.format(v)} km al giorno</div>${F.km.format(r.km_netti)} km netti ÷ ${plur(r.giorni_attivi, "giorno attivo", "giorni attivi")}.`;
     case "n_operatori": return `<div class="big">${plur(v, "operatore", "operatori")}</div>${elenco(r._o || [], 20)}`;
+    case "ultima":      return v ? `<div class="big">${dLungo(v.slice(0, 10))}, ore ${v.slice(11)}</div>Ultima sincronizzazione ${ogg} nel periodo (${fa(v.slice(0, 10))}).`
+                                 : `<div class="big">Nessuna sincronizzazione</div>Nel periodo ci sono solo foto, sincronizzate in un giorno successivo.`;
     case "n_progetti":  return `<div class="big">${plur(v, "progetto", "progetti")}</div>${elenco(r._p || [], 20)}`;
   }
   return "";
@@ -1185,13 +1288,14 @@ function renderAvvisi() {
 const pulisciLayer = s => String(s).replace(/_?[0-9a-f]{8}(_[0-9a-f]{4}){3}_[0-9a-f]{12}$/i, "").replace(/_?\d{17}$/, "") || String(s);
 function impostaDati(d) {
   const prima = DATI && DATI.aggiornato;
-  d.righe.forEach(r => { r.layer_id = r.layer; r.layer = pulisciLayer(r.layer); r.foto ||= 0; r.punti ||= 0; r.geom ||= ""; r.inizio ||= ""; r.fine ||= ""; });
+  d.righe.forEach(r => { r.layer_id = r.layer; r.layer = pulisciLayer(r.layer); r.foto ||= 0; r.punti ||= 0; r.geom ||= ""; r.inizio ||= ""; r.fine ||= ""; r.sync ||= ""; });
   DATI = d;
   if (prima !== DATI.aggiornato) {
     if (ui.periodo !== "custom") applicaPeriodo(ui.periodo);  // i periodi rapidi seguono il nuovo ultimo giorno
     if (ui.da && ui.da < DATI.dal) ui.da = "";
     if (ui.a && ui.a > DATI.al) ui.a = "";
   }
+  coloriProgetti();
   $("fDa").min = $("fA").min = DATI.dal; $("fDa").max = $("fA").max = DATI.al;
   syncPeriodoUi();
   for (const k of ["operatore", "progetto", "layer"]) {
@@ -1298,7 +1402,7 @@ $("tb").addEventListener("click", e => {
 $("th").addEventListener("click", e => {
   const th = e.target.closest("tr.h th[data-k]"); if (!th) return;
   const k = th.dataset.k, cur = ordAttivo();
-  const dir = cur[0][0] === k ? -cur[0][1] : (isNum(k) || COL[k].t === "data" ? -1 : 1);
+  const dir = cur[0][0] === k ? -cur[0][1] : (isNum(k) || ["data","dataora"].includes(COL[k].t) ? -1 : 1);
   ui.sort[ui.vista] = [[k, dir], ...VISTE[ui.vista].sort.filter(s => s[0] !== k)];
   salvaUi(); render();
 });
@@ -1324,6 +1428,10 @@ Object.entries(GSEL).forEach(([k, id]) => $(id).addEventListener("change", e => 
 $("layer-pills").addEventListener("click", e => {
   const p = e.target.closest(".layer-pill[data-layer]"); if (!p) return;
   filtroPannello("layer", p.dataset.layer && ui.f.layer !== p.dataset.layer ? p.dataset.layer : "");
+});
+$("pay").addEventListener("click", e => {
+  const b = e.target.closest("[data-g][data-v]"); if (!b) return;
+  filtroPannello(b.dataset.g, ui.f[b.dataset.g] === b.dataset.v ? "" : b.dataset.v);
 });
 document.querySelector(".charts-grid").addEventListener("click", e => {
   const b = e.target.closest(".bar-item[data-g]"); if (!b) return;

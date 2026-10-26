@@ -9,6 +9,7 @@ visibili all'utente configurato e calcola, per giorno / operatore / progetto / l
   - feature create / modificate / cancellate, e quanti dei creati sono punti
   - tipo di geometria di ogni layer (punto, linea, poligono)
   - foto scattate, orario della prima (inizio) e dell'ultima (fine) foto della giornata
+  - orario dell'ultima sincronizzazione (ultimo delta arrivato sul server)
 (calcola internamente anche m2 di poligoni e delta in errore, oggi non mostrati)
 
 Produce un Excel oppure (con --json) i dati della board web in sito/.
@@ -254,7 +255,7 @@ def elabora(client, dal: date, al: date, filtro_progetti=None, tutti=False,
             log=print, avanzamento=None):
     """
     Ritorna un dict:
-      righe     lista di dict (giorno, operatore, progetto, layer, geom + METRICHE + inizio/fine "HH:MM")
+      righe     lista di dict (giorno, operatore, progetto, layer, geom + METRICHE + inizio/fine/sync "HH:MM")
       avvisi    lista di stringhe
       progetti  {"letti": n, "saltati": n, "errori": n}
     """
@@ -273,6 +274,7 @@ def elabora(client, dal: date, al: date, filtro_progetti=None, tutti=False,
     avvisi, visti, errori = [], set(), 0
     scartate = defaultdict(int)
     orari = {}                         # chiave -> [prima, ultima] foto
+    ultime_sync = {}                   # chiave -> ultimo delta sincronizzato
     geom_layer = {}                    # (progetto, layer) -> punto | linea | poligono
     foto_viste = set()                 # (progetto, nome file): ogni foto conta una volta sola
     foto_senza_ora = defaultdict(list)
@@ -318,7 +320,9 @@ def elabora(client, dal: date, al: date, filtro_progetti=None, tutti=False,
                 stato = (d.get("last_status") or d.get("status") or "").lower()
                 metodo = (c.get("method") or "").lower()
                 op = d.get("created_by") or "?"
-                a = agg[(giorno, op, nome, layer)]
+                k = (giorno, op, nome, layer)
+                a = agg[k]
+                ultime_sync[k] = max(ultime_sync.get(k, quando), quando)
                 # foto: vanno nel giorno di scatto, a prescindere dallo stato del delta
                 for f in foto_delta(c):
                     if (nome, nome_file(f)) in foto_viste:
@@ -380,13 +384,14 @@ def elabora(client, dal: date, al: date, filtro_progetti=None, tutti=False,
         if not any(v.values()):
             continue
         g, op, pr, ly = k
-        o = orari.get(k)
+        o, us = orari.get(k), ultime_sync.get(k)
         righe.append(dict(giorno=g.isoformat(), operatore=op, progetto=pr, layer=ly,
                           geom=geom_layer.get((pr, ly), ""),
                           km_netti=round(v["km_netti"], 4), km_nuovi=round(v["km_nuovi"], 4),
                           mq_netti=round(v["mq_netti"], 1), create=v["create"], punti=v["punti"],
                           modificate=v["modificate"], cancellate=v["cancellate"], problemi=v["problemi"],
-                          foto=v["foto"], inizio=o and f"{o[0]:%H:%M}", fine=o and f"{o[1]:%H:%M}"))
+                          foto=v["foto"], inizio=o and f"{o[0]:%H:%M}", fine=o and f"{o[1]:%H:%M}",
+                          sync=us and f"{locale(us):%H:%M}"))
     righe.sort(key=lambda r: (r["giorno"], r["operatore"], r["progetto"], r["layer"]), reverse=True)
     return dict(righe=righe, avvisi=avvisi,
                 progetti=dict(letti=len(da_leggere) - errori, saltati=len(saltati), errori=errori))
