@@ -613,7 +613,8 @@ il secondo inverte. La freccia blu indica la colonna usata.</p>
     <code>Layer;Anno;Mese;Giorno;Operatore;Progetto;Inizio;Fine;Lunghezza</code>.</li>
   <li><b>Mese</b> è il nome del mese (es. <i>ottobre</i>), <b>Inizio</b> e <b>Fine</b> sono gli orari della prima e dell'ultima foto (vuoti se non ci sono foto), <b>Lunghezza</b> sono i <b>km netti in metri</b>.</li>
   <li>Separatore <code>;</code> e decimali con la virgola: si apre anche direttamente con Excel.</li>
-  <li>Il file finisce nella cartella <i>Download</i> del browser con il periodo nel nome, ad esempio <code>produzione_operatore_2026-08-18_2026-10-16.csv</code>.</li>
+  <li>Il file finisce nella cartella <i>Download</i> del browser con nome <code>PROGETTO_OPERATORE_SETTIMANA</code>, ad esempio <code>Milano Nord_Mario Rossi_W43.csv</code>.
+    Se nel file ci sono più progetti o più operatori al loro posto c'è <code>TUTTI</code>; se il periodo copre più settimane c'è l'intervallo, ad esempio <code>W42-W44</code>.</li>
 </ul>
 
 <h3 id="g-limiti">8. Avvisi e limiti da conoscere</h3>
@@ -1397,10 +1398,23 @@ function righeCsv() {
     return [r.layer, y, MESI_IT[m - 1], Number(d), r.operatore, r.progetto, r.inizio || "", r.fine || "", metri];
   });
 }
+// settimana ISO (lunedì-domenica, la prima è quella che contiene il primo giovedì dell'anno)
+function settIso(iso) {
+  const d = dObj(iso); d.setDate(d.getDate() + 3 - (d.getDay() + 6) % 7);
+  const g1 = new Date(d.getFullYear(), 0, 4);
+  return 1 + Math.round(((d - g1) / 86400000 - 3 + (g1.getDay() + 6) % 7) / 7);
+}
+// nome file PROGETTO_OPERATORE_WEEK: "TUTTI" se nel file ci sono più progetti/operatori, intervallo se il periodo copre più settimane
+function nomeCsv(righe, pda, pa) {
+  const unico = i => { const v = new Set(righe.map(r => r[i])); return v.size === 1 ? [...v][0] : "TUTTI"; };
+  const pulisci = s => String(s).replace(/[\\/:*?"<>|]+/g, "-").replace(/\s+/g, " ").trim();
+  const w1 = settIso(pda), w2 = settIso(pa), w = n => `W${String(n).padStart(2, "0")}`;
+  return [unico(5), unico(4), w1 === w2 ? w(w1) : `${w(w1)}-${w(w2)}`].map(pulisci).join("_");
+}
 function esporta() {
   calcola();
   try {
-    const [pda, pa] = periodoEff(), file = `produzione_${ui.vista}_${pda}_${pa}`, righe = righeCsv();
+    const [pda, pa] = periodoEff(), righe = righeCsv(), file = nomeCsv(righe, pda, pa);
     const csv = "﻿" + [CSV_COL, ...righe].map(r => r.map(csvCampo).join(";")).join("\r\n") + "\r\n";
     const url = URL.createObjectURL(new Blob([csv], {type: "text/csv;charset=utf-8"}));
     const a = document.createElement("a");
