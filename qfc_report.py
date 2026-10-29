@@ -35,6 +35,7 @@ Dipendenze: requests, shapely, pyproj, openpyxl  (tzdata su Windows)
 """
 import argparse
 import json
+import math
 import os
 import re
 import sys
@@ -182,11 +183,14 @@ def misura(geom_wkt):
     t = g.geom_type
     if "Line" in t:
         km = (GEOD.geometry_length(g) if geografico else g.length) / 1000.0
-        if km > KM_MAX_FEATURE:
+        # coordinate NaN/inf danno km non finiti: finirebbero come NaN nel JSON e la board non si caricherebbe
+        if not math.isfinite(km) or km > KM_MAX_FEATURE:
             return 0.0, 0.0, True
         return km, 0.0, False
     if "Polygon" in t:
         mq = abs(GEOD.geometry_area_perimeter(g)[0]) if geografico else g.area
+        if not math.isfinite(mq):
+            return 0.0, 0.0, True
         return 0.0, mq, False
     return 0.0, 0.0, False
 
@@ -387,7 +391,7 @@ def elabora(client, dal: date, al: date, filtro_progetti=None, tutti=False,
     for nome, n in sorted(scartate.items()):
         if n:
             avvisi.append(f"{nome}: {n} geometrie scartate perché più lunghe di {KM_MAX_FEATURE} km "
-                          f"(probabile CRS errato)")
+                          f"(probabile CRS errato) o con coordinate non valide")
     for nome, nomi in sorted(foto_senza_ora.items()):
         avvisi.append(f"{nome}: {len(nomi)} foto senza data e ora leggibili nel nome del file o con orario "
                       f"non plausibile (es. {', '.join(nomi[:3])}): non contano in foto, inizio e fine")
@@ -581,7 +585,7 @@ def main():
                     aggiornato=adesso().isoformat(timespec="seconds"), durata=round(time.time() - t0, 1))
         out_json = Path(a.json)
         out_json.parent.mkdir(parents=True, exist_ok=True)
-        out_json.write_text(json.dumps(dati, ensure_ascii=False), encoding="utf-8")
+        out_json.write_text(json.dumps(dati, ensure_ascii=False, allow_nan=False), encoding="utf-8")
         print(f"Dati board salvati: {out_json}")
     if a.out or not a.json:
         out = a.out or str(Path(__file__).with_name(f"report_rilievi_{dal}_{al}.xlsx"))
